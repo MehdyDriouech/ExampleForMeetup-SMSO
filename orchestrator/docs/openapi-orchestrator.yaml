@@ -1,0 +1,1013 @@
+openapi: 3.1.0
+info:
+  title: Study-mate School Orchestrator API
+  version: 1.0.0
+  description: |
+    API REST du tableau de bord pédagogique (Orchestrator) connecté à Ergo-Mate.
+    
+    **Identité élève** : UUID scolaire + e-mail scolaire.
+    **Sécurité** : UrlEncoded (prioritaire) + JWT Bearer (optionnel) + HTTPS.
+    **Multi-tenant** : Chaque requête doit inclure tenant_id.
+    
+    Inclut des webhooks Ergo-Mate → Orchestrator.
+
+servers:
+  - url: https://smso.mehdydriouech.fr
+    description: Production
+  - url: http://localhost:8080
+    description: Local dev
+
+tags:
+  - name: Auth
+    description: Authentification et gestion de session
+  - name: Health
+    description: État du service
+  - name: Students
+    description: Gestion et consultation des élèves
+  - name: Classes
+    description: Gestion des classes
+  - name: Themes
+    description: Contenus pédagogiques
+  - name: Assignments
+    description: Création et planification d'activités
+  - name: Stats
+    description: Statistiques consolidées côté Orchestrator
+  - name: Sync
+    description: Synchronisation avec Ergo-Mate
+  - name: Dashboard
+    description: Vues agrégées pour enseignants
+  - name: Mistral
+    description: Génération IA de contenus
+  - name: Webhooks
+    description: Réceptions d'événements Ergo-Mate
+
+paths:
+  /api/health:
+    get:
+      tags: [Health]
+      summary: État du service
+      parameters:
+        - name: check
+          in: query
+          schema:
+            type: string
+            enum: [db, full]
+          description: "Type de vérification (db: test connexion DB)"
+      responses:
+        '200':
+          description: Service opérationnel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                basic:
+                  value:
+                    status: ok
+                    version: 1.0.0
+                    timestamp: "2025-11-10T10:00:00Z"
+                full:
+                  value:
+                    status: ok
+                    version: 1.0.0
+                    timestamp: "2025-11-10T10:00:00Z"
+                    database:
+                      status: ok
+                      latency_ms: 12
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Connexion et obtention du JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              teacher:
+                value:
+                  email: claire.dubois@ife-paris.fr
+                  password: Ergo2025!
+      responses:
+        '200':
+          description: Authentification réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Informations utilisateur connecté
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/students:
+    get:
+      tags: [Students]
+      summary: Lister les élèves d'une classe
+      parameters:
+        - name: classId
+          in: query
+          required: true
+          schema:
+            type: string
+          example: CLASS_PARIS_L1_A
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des élèves
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Student'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              examples:
+                default:
+                  value:
+                    data:
+                      - id: STU_PARIS_001
+                        uuid_scolaire: uuid-ergo-paris-001
+                        email_scolaire: alice.dupont@etudiant.ife-paris.fr
+                        firstname: Alice
+                        lastname: Dupont
+                        classId: CLASS_PARIS_L1_A
+                      - id: STU_PARIS_002
+                        uuid_scolaire: uuid-ergo-paris-002
+                        email_scolaire: lucas.moreau@etudiant.ife-paris.fr
+                        firstname: Lucas
+                        lastname: Moreau
+                        classId: CLASS_PARIS_L1_A
+                    pagination:
+                      total: 25
+                      limit: 50
+                      offset: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/classes:
+    get:
+      tags: [Classes]
+      summary: Lister les classes du tenant
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: promoId
+          in: query
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des classes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Class'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/classes/{id}:
+    get:
+      tags: [Classes]
+      summary: Détails d'une classe
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Détails de la classe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/themes:
+    get:
+      tags: [Themes]
+      summary: Lister les thèmes disponibles
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, archived]
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des thèmes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Theme'
+
+    post:
+      tags: [Themes]
+      summary: Créer un nouveau thème
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ThemeCreate'
+      responses:
+        '201':
+          description: Thème créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Theme'
+
+  /api/assignments:
+    get:
+      tags: [Assignments]
+      summary: Lister les affectations
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, queued, pushed, ack, error]
+        - name: teacherId
+          in: query
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des affectations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Assignment'
+
+    post:
+      tags: [Assignments]
+      summary: Créer une affectation (quiz/flashcards/fiche/annales)
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Clé pour éviter les doublons
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+            examples:
+              quiz:
+                value:
+                  api_key: "secret_key"
+                  tenant_id: TENANT_INST_PARIS
+                  scope: teacher
+                  type: quiz
+                  themeId: THEME_PARIS_001
+                  title: "Quiz Anatomie MS - Révision S1"
+                  dueAt: "2025-11-15T18:00:00Z"
+                  targets: "CLASS_PARIS_L1_A"
+      responses:
+        '201':
+          description: Affectation créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/assignments/{id}:
+    get:
+      tags: [Assignments]
+      summary: Détails d'une affectation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Détails de l'affectation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+
+  /api/sync/pull-stats:
+    post:
+      tags: [Sync]
+      summary: Déclencher un pull des stats depuis Ergo-Mate
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PullStatsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PullStatsRequest'
+      responses:
+        '202':
+          description: Pull en cours
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncLog'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/stats:
+    get:
+      tags: [Stats]
+      summary: Consulter les stats consolidées
+      parameters:
+        - name: studentId
+          in: query
+          schema:
+            type: string
+        - name: classId
+          in: query
+          schema:
+            type: string
+        - name: themeId
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Statistiques consolidées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stats'
+
+  /api/dashboard/summary:
+    get:
+      tags: [Dashboard]
+      summary: Résumé dashboard enseignant
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: classId
+          in: query
+          schema:
+            type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Résumé statistiques
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardSummary'
+
+  /api/mistral/queue:
+    get:
+      tags: [Mistral]
+      summary: État de la file d'attente Mistral
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Jobs en attente/traitement
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MistralJob'
+
+    post:
+      tags: [Mistral]
+      summary: Soumettre un PDF pour génération IA
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                pdf:
+                  type: string
+                  format: binary
+                jobType:
+                  type: string
+                  enum: [quiz, flashcards, fiche, full_theme]
+                metadata:
+                  type: string
+                  description: JSON metadata
+      responses:
+        '202':
+          description: Job soumis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MistralJob'
+
+  /api/webhooks/ergo/session-ended:
+    post:
+      tags: [Webhooks]
+      summary: 'Webhook : fin de session côté Ergo-Mate'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionEnded'
+      responses:
+        '204':
+          description: Reçu
+      security: []
+
+  /api/webhooks/ergo/assignment-ack:
+    post:
+      tags: [Webhooks]
+      summary: "Webhook : accusé d'affectation côté Ergo-Mate"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentAck'
+      responses:
+        '204':
+          description: Reçu
+      security: []
+
+  /api/webhooks/ergo/error:
+    post:
+      tags: [Webhooks]
+      summary: 'Webhook : erreur remontée par Ergo-Mate'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ErgoError'
+      responses:
+        '204':
+          description: Reçu
+      security: []
+
+components:
+  securitySchemes:
+    urlEncodedAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Auth via form-urlencoded (prioritaire pour hébergement mutualisé).
+        Champs requis dans le body: api_key, tenant_id, scope
+        
+        Exemple:
+        ```
+        api_key=secret_teacher_key
+        &tenant_id=TENANT_INST_PARIS
+        &scope=teacher
+        ```
+    
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Auth JWT (optionnel, mode MIXED).
+        Token contient: sub, tenant_id, scope, exp
+
+  parameters:
+    TenantHeader:
+      name: X-Orchestrator-Id
+      in: header
+      required: true
+      schema:
+        type: string
+      description: ID du tenant (école)
+      example: TENANT_INST_PARIS
+
+  responses:
+    Unauthorized:
+      description: JWT invalide, api_key manquante ou scope insuffisant
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Forbidden:
+      description: Accès refusé (tenant mismatch, etc.)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    NotFound:
+      description: Ressource introuvable
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    BadRequest:
+      description: Erreur de validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    Conflict:
+      description: Conflit (idempotence, doublon, etc.)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    
+    TooManyRequests:
+      description: Rate limit atteinte
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+          example: UNAUTHORIZED
+        message:
+          type: string
+          example: "Invalid API key"
+        timestamp:
+          type: string
+          format: date-time
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded, error]
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        database:
+          type: object
+          properties:
+            status:
+              type: string
+            latency_ms:
+              type: integer
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+        expiresAt:
+          type: string
+          format: date-time
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        role:
+          type: string
+          enum: [admin, direction, teacher, intervenant]
+
+    Student:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        classId:
+          type: string
+        promoId:
+          type: string
+        uuid_scolaire:
+          type: string
+        email_scolaire:
+          type: string
+          format: email
+        firstname:
+          type: string
+        lastname:
+          type: string
+        consent_sharing:
+          type: boolean
+        status:
+          type: string
+          enum: [active, graduated, withdrawn]
+
+    Class:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        promoId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        teacherId:
+          type: string
+        status:
+          type: string
+          enum: [active, archived]
+        studentCount:
+          type: integer
+
+    Theme:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        source:
+          type: string
+          enum: [manual, pdf_mistral, import]
+        status:
+          type: string
+          enum: [draft, active, archived]
+
+    ThemeCreate:
+      type: object
+      required: [title, content]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        content:
+          type: object
+          description: Contenu JSON du thème
+        tags:
+          type: array
+          items:
+            type: string
+        difficulty:
+          type: string
+
+    AssignmentCreate:
+      type: object
+      required: [type, themeId, title, targets]
+      properties:
+        type:
+          type: string
+          enum: [quiz, flashcards, fiche, annales]
+        themeId:
+          type: string
+        title:
+          type: string
+        mode:
+          type: string
+          enum: [post-cours, pre-examen, revision-generale]
+        dueAt:
+          type: string
+          format: date-time
+        instructions:
+          type: string
+        targets:
+          type: string
+          description: "Cible: classId, promoId ou liste studentIds (CSV)"
+
+    Assignment:
+      allOf:
+        - $ref: '#/components/schemas/AssignmentCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+            tenantId:
+              type: string
+            teacherId:
+              type: string
+            status:
+              type: string
+              enum: [draft, queued, pushed, ack, error]
+            createdAt:
+              type: string
+              format: date-time
+
+    PullStatsRequest:
+      type: object
+      properties:
+        classId:
+          type: string
+        promoId:
+          type: string
+        themeId:
+          type: string
+        since:
+          type: string
+          format: date-time
+          description: Date de début pour le pull
+
+    Stats:
+      type: object
+      properties:
+        id:
+          type: string
+        studentId:
+          type: string
+        themeId:
+          type: string
+        attempts:
+          type: integer
+        score:
+          type: number
+          format: float
+        mastery:
+          type: number
+          format: float
+        timeSpent:
+          type: integer
+          description: Temps en secondes
+        lastActivityAt:
+          type: string
+          format: date-time
+
+    SyncLog:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        direction:
+          type: string
+          enum: [pull, push]
+        type:
+          type: string
+          enum: [stats, assignment, webhook]
+        status:
+          type: string
+          enum: [queued, running, ok, error]
+        startedAt:
+          type: string
+          format: date-time
+        endedAt:
+          type: string
+          format: date-time
+
+    DashboardSummary:
+      type: object
+      properties:
+        kpis:
+          type: object
+          properties:
+            totalStudents:
+              type: integer
+            activeStudents:
+              type: integer
+            avgScore:
+              type: number
+            avgMastery:
+              type: number
+        recentActivity:
+          type: array
+          items:
+            type: object
+
+    MistralJob:
+      type: object
+      properties:
+        id:
+          type: string
+        tenantId:
+          type: string
+        userId:
+          type: string
+        jobType:
+          type: string
+          enum: [quiz, flashcards, fiche, full_theme]
+        status:
+          type: string
+          enum: [pending, processing, completed, error]
+        resultThemeId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    SessionEnded:
+      type: object
+      required: [uuid, email, themeId, endedAt]
+      properties:
+        uuid:
+          type: string
+          description: UUID scolaire de l'élève
+        email:
+          type: string
+          format: email
+          description: Email scolaire de l'élève
+        themeId:
+          type: string
+        score:
+          type: number
+        timeSpent:
+          type: integer
+        endedAt:
+          type: string
+          format: date-time
+        attemptId:
+          type: string
+
+    AssignmentAck:
+      type: object
+      required: [assignmentId, ackAt]
+      properties:
+        assignmentId:
+          type: string
+        ackAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [received, started, completed, error]
+
+    ErgoError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        correlationId:
+          type: string
+        context:
+          type: object
+          additionalProperties: true
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
