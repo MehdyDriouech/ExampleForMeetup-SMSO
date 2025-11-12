@@ -169,6 +169,49 @@ class Logger {
             'error' => $error
         ], $context));
     }
+
+    /**
+     * Logger une violation de sécurité tenant
+     */
+    public function logTenantViolation($type, $context = []) {
+        $this->warn('SECURITY: Tenant Violation', array_merge([
+            'violation_type' => $type,
+            'severity' => 'high'
+        ], $context));
+    }
+
+    /**
+     * Logger un refus RBAC
+     */
+    public function logRBACDenial($resource, $action, $role, $context = []) {
+        $this->warn('SECURITY: RBAC Denial', array_merge([
+            'resource' => $resource,
+            'action' => $action,
+            'role' => $role,
+            'severity' => 'medium'
+        ], $context));
+    }
+
+    /**
+     * Logger un événement d'authentification
+     */
+    public function logAuthEvent($event, $success, $context = []) {
+        $level = $success ? self::INFO : self::WARN;
+        $this->log($level, 'AUTH: ' . $event, array_merge([
+            'success' => $success
+        ], $context));
+    }
+
+    /**
+     * Logger un accès à une ressource sensible
+     */
+    public function logSensitiveAccess($resource, $resourceId, $action, $context = []) {
+        $this->info('AUDIT: Sensitive Access', array_merge([
+            'resource' => $resource,
+            'resource_id' => $resourceId,
+            'action' => $action
+        ], $context));
+    }
 }
 
 /**
@@ -192,4 +235,20 @@ function logWarn($message, $context = []) {
 
 function logError($message, $context = []) {
     logger()->error($message, $context);
+}
+
+function logTenantViolation($type, $context = []) {
+    logger()->logTenantViolation($type, $context);
+}
+
+function logRBACDenial($resource, $action, $role, $context = []) {
+    logger()->logRBACDenial($resource, $action, $role, $context);
+}
+
+function logAuthEvent($event, $success, $context = []) {
+    logger()->logAuthEvent($event, $success, $context);
+}
+
+function logSensitiveAccess($resource, $resourceId, $action, $context = []) {
+    logger()->logSensitiveAccess($resource, $resourceId, $action, $context);
 }

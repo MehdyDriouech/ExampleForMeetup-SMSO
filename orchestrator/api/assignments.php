@@ -13,6 +13,8 @@
  */
 
 require_once __DIR__ . '/../.env.php';
+require_once __DIR__ . '/_middleware_tenant.php';
+require_once __DIR__ . '/_middleware_rbac.php';
 
 setCorsHeaders();
 
@@ -30,8 +32,16 @@ $action = $pathParts[4] ?? null; // /api/assignments/{id}/events
 // GET /api/assignments - Liste des assignments
 // ============================================================
 if ($method === 'GET' && !$assignmentId) {
+    // Security middleware
+    $tenantContext = enforceTenantIsolation();
     $auth = requireAuth();
-    $tenantId = $auth->getTenantId();
+    enforceTenantAuthMatch($tenantContext, $auth);
+    $rbac = enforceRBAC($auth);
+
+    // Permission check - teachers can read their own, others can read all
+    $rbac->requirePermission('assignments', 'read');
+
+    $tenantId = $tenantContext->getTenantId();
 
     $limit = intval($_GET['limit'] ?? 50);
     $offset = intval($_GET['offset'] ?? 0);
@@ -42,6 +52,12 @@ if ($method === 'GET' && !$assignmentId) {
     // Construire la requête
     $where = ['a.tenant_id = :tenant_id'];
     $params = ['tenant_id' => $tenantId];
+
+    // Apply ownership filter for teachers (admin/direction/inspector can see all)
+    $ownershipWhere = $rbac->ownershipWhere('assignments', 'teacher_id', 'a');
+    if ($ownershipWhere !== '1=1') {
+        $where[] = $ownershipWhere;
+    }
 
     if ($status) {
         $where[] = 'a.status = :status';
@@ -125,10 +141,17 @@ if ($method === 'GET' && !$assignmentId) {
 // POST /api/assignments - Créer un assignment
 // ============================================================
 if ($method === 'POST' && !$assignmentId) {
+    // Security middleware
+    $tenantContext = enforceTenantIsolation();
     $auth = requireAuth();
-    $tenantId = $auth->getTenantId();
-    $user = $auth->getUser();
-    $teacherId = $user['user_id'] ?? null;
+    enforceTenantAuthMatch($tenantContext, $auth);
+    $rbac = enforceRBAC($auth);
+
+    // Permission check
+    $rbac->requirePermission('assignments', 'create');
+
+    $tenantId = $tenantContext->getTenantId();
+    $teacherId = $rbac->getUserId();
 
     $body = getRequestBody();
 
@@ -155,13 +178,16 @@ if ($method === 'POST' && !$assignmentId) {
 
     // Vérifier que le thème existe et appartient au tenant
     $theme = db()->queryOne(
-        'SELECT id FROM themes WHERE id = :id AND tenant_id = :tenant_id',
-        ['id' => $themeId, 'tenant_id' => $tenantId]
+        'SELECT id, tenant_id FROM themes WHERE id = :id',
+        ['id' => $themeId]
     );
 
     if (!$theme) {
         errorResponse('NOT_FOUND', 'Theme not found', 404);
     }
+
+    // Verify theme belongs to same tenant
+    $tenantContext->verifyOwnership($theme['tenant_id'], 'theme', $theme['id']);
 
     // Calculer le hash du payload pour idempotence
     $payloadHash = payloadHash([
@@ -220,17 +246,18 @@ if ($method === 'POST' && !$assignmentId) {
             ]
         );
 
-        // Insérer les cibles
+        // Insérer les cibles (avec tenant_id pour isolation complète)
         foreach ($targets as $target) {
             if (!isset($target['type']) || !isset($target['id'])) {
                 continue;
             }
 
             db()->execute(
-                'INSERT INTO assignment_targets (assignment_id, target_type, target_id)
-                 VALUES (:assignment_id, :target_type, :target_id)',
+                'INSERT INTO assignment_targets (assignment_id, tenant_id, target_type, target_id)
+                 VALUES (:assignment_id, :tenant_id, :target_type, :target_id)',
                 [
                     'assignment_id' => $assignmentId,
+                    'tenant_id' => $tenantId,
                     'target_type' => $target['type'],
                     'target_id' => $target['id']
                 ]
@@ -293,8 +320,16 @@ if ($method === 'POST' && !$assignmentId) {
 // GET /api/assignments/{id} - Détails d'un assignment
 // ============================================================
 if ($method === 'GET' && $assignmentId && !$action) {
+    // Security middleware
+    $tenantContext = enforceTenantIsolation();
     $auth = requireAuth();
-    $tenantId = $auth->getTenantId();
+    enforceTenantAuthMatch($tenantContext, $auth);
+    $rbac = enforceRBAC($auth);
+
+    // Permission check
+    $rbac->requirePermission('assignments', 'read');
+
+    $tenantId = $tenantContext->getTenantId();
 
     $assignment = db()->queryOne(
         'SELECT a.*,
@@ -310,6 +345,11 @@ if ($method === 'GET' && $assignmentId && !$action) {
 
     if (!$assignment) {
         errorResponse('NOT_FOUND', 'Assignment not found', 404);
+    }
+
+    // Check ownership if teacher role
+    if (!$rbac->can('assignments', 'read_all') && !$rbac->owns('assignments', $assignment)) {
+        errorResponse('FORBIDDEN', 'You can only view your own assignments', 403);
     }
 
     // Récupérer les cibles
@@ -341,8 +381,16 @@ if ($method === 'GET' && $assignmentId && !$action) {
 // GET /api/assignments/{id}/events - Événements de tracking
 // ============================================================
 if ($method === 'GET' && $assignmentId && $action === 'events') {
+    // Security middleware
+    $tenantContext = enforceTenantIsolation();
     $auth = requireAuth();
-    $tenantId = $auth->getTenantId();
+    enforceTenantAuthMatch($tenantContext, $auth);
+    $rbac = enforceRBAC($auth);
+
+    // Permission check
+    $rbac->requirePermission('assignments', 'read');
+
+    $tenantId = $tenantContext->getTenantId();
 
     // Vérifier que l'assignment existe et appartient au tenant
     $assignment = db()->queryOne(

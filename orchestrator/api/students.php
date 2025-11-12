@@ -5,6 +5,8 @@
  */
 
 require_once __DIR__ . '/../.env.php';
+require_once __DIR__ . '/_middleware_tenant.php';
+require_once __DIR__ . '/_middleware_rbac.php';
 
 setCorsHeaders();
 
@@ -12,8 +14,16 @@ $method = $_SERVER['REQUEST_METHOD'];
 $start = microtime(true);
 
 if ($method === 'GET') {
+    // Security middleware
+    $tenantContext = enforceTenantIsolation();
     $auth = requireAuth();
-    $tenantId = $auth->getTenantId();
+    enforceTenantAuthMatch($tenantContext, $auth);
+    $rbac = enforceRBAC($auth);
+
+    // Permission check
+    $rbac->requirePermission('students', 'read');
+
+    $tenantId = $tenantContext->getTenantId();
     
     // GET /api/students/{id}
     if (isset($_GET['id']) && $_GET['id']) {

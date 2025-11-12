@@ -4,11 +4,47 @@ info:
   version: 1.0.0
   description: |
     API REST du tableau de bord pédagogique (Orchestrator) connecté à Ergo-Mate.
-    
+
     **Identité élève** : UUID scolaire + e-mail scolaire.
     **Sécurité** : UrlEncoded (prioritaire) + JWT Bearer (optionnel) + HTTPS.
-    **Multi-tenant** : Chaque requête doit inclure tenant_id.
-    
+    **Multi-tenant** : Chaque requête doit inclure tenant_id (X-Orchestrator-Id header ou body).
+    **RBAC** : Contrôle d'accès basé sur les rôles (admin, direction, teacher, inspector, intervenant).
+
+    ## Isolation Multi-tenant (Sprint 3)
+
+    Toutes les requêtes nécessitent un identifiant de tenant valide. L'isolation est garantie par:
+    - Header `X-Orchestrator-Id` (recommandé pour JWT)
+    - Paramètre `tenant_id` dans le body (pour URLENCODED)
+    - Validation stricte: accès inter-tenant bloqué avec 403
+    - Audit: tous les refus sont journalisés
+
+    ## Rôles et Permissions (RBAC)
+
+    ### Rôles disponibles:
+
+    - **admin**: Accès complet au tenant
+    - **direction**: Vue d'ensemble, rapports agrégés, gestion utilisateurs
+    - **teacher**: CRUD sur propres assignments/themes, vue propres élèves
+    - **inspector**: Lecture seule sur stats et assignments (audit)
+    - **intervenant**: Accès limité aux classes assignées
+
+    ### Matrice de permissions par ressource:
+
+    | Resource | Action | Admin | Direction | Teacher | Inspector | Intervenant |
+    |----------|--------|-------|-----------|---------|-----------|-------------|
+    | assignments | create | ✅ | ✅ | ✅ | ❌ | ❌ |
+    | assignments | read (own) | ✅ | ✅ | ✅ | ❌ | ❌ |
+    | assignments | read (all) | ✅ | ✅ | ❌ | ✅ | ❌ |
+    | assignments | update (own) | ✅ | ✅ | ✅ | ❌ | ❌ |
+    | assignments | update (any) | ✅ | ✅ | ❌ | ❌ | ❌ |
+    | assignments | delete | ✅ | ✅ | ✅ (own) | ❌ | ❌ |
+    | students | read | ✅ | ✅ | ✅ | ✅ | ✅ |
+    | students | create/update | ✅ | ✅ | ❌ | ❌ | ❌ |
+    | stats | read | ✅ | ✅ | ✅ (own) | ✅ | ❌ |
+    | stats | sync | ✅ | ✅ | ✅ | ❌ | ❌ |
+    | dashboard | summary | ✅ | ✅ | ✅ | ✅ | ❌ |
+    | dashboard | aggregated | ✅ | ✅ | ❌ | ✅ | ❌ |
+
     Inclut des webhooks Ergo-Mate → Orchestrator.
 
 servers:
@@ -579,21 +615,44 @@ components:
       description: |
         Auth via form-urlencoded (prioritaire pour hébergement mutualisé).
         Champs requis dans le body: api_key, tenant_id, scope
-        
+
+        **Scopes disponibles**: admin, direction, teacher, inspector, intervenant
+
         Exemple:
         ```
         api_key=secret_teacher_key
         &tenant_id=TENANT_INST_PARIS
         &scope=teacher
         ```
-    
+
+        **Isolation tenant**: Le tenant_id dans le body doit correspondre au tenant de l'utilisateur.
+        Tout accès inter-tenant sera bloqué avec HTTP 403.
+
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: |
         Auth JWT (optionnel, mode MIXED).
-        Token contient: sub, tenant_id, scope, exp
+        Token contient: sub, tenant_id, scope (role), exp
+
+        **Header requis**: X-Orchestrator-Id avec le tenant_id
+
+        **Validation RBAC**: Le scope/role dans le JWT détermine les permissions.
+        Les rôles sont: admin, direction, teacher, inspector, intervenant.
+
+        Exemple JWT payload:
+        ```json
+        {
+          "sub": "USER_CLAIRE_DUBOIS",
+          "tenant_id": "TENANT_INST_PARIS",
+          "scope": "teacher",
+          "exp": 1699999999
+        }
+        ```
+
+        **Isolation tenant**: Le X-Orchestrator-Id header doit correspondre au tenant_id du JWT.
+        Sinon, la requête sera rejetée avec HTTP 403.
 
   parameters:
     TenantHeader:
@@ -614,11 +673,43 @@ components:
             $ref: '#/components/schemas/Error'
     
     Forbidden:
-      description: Accès refusé (tenant mismatch, etc.)
+      description: |
+        Accès refusé - peut être causé par:
+        - Tenant mismatch (accès inter-tenant)
+        - Permissions insuffisantes (RBAC)
+        - Tentative d'accès à ressource d'un autre utilisateur
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  required_permission:
+                    type: string
+                    example: "assignments:update"
+                  your_role:
+                    type: string
+                    example: "teacher"
+          examples:
+            tenant_mismatch:
+              value:
+                code: TENANT_MISMATCH
+                message: "Your authentication tenant does not match the requested tenant"
+                timestamp: "2025-11-12T10:00:00Z"
+            insufficient_permissions:
+              value:
+                code: FORBIDDEN
+                message: "You do not have permission to update assignments"
+                required_permission: "assignments:update"
+                your_role: "inspector"
+                timestamp: "2025-11-12T10:00:00Z"
+            ownership_violation:
+              value:
+                code: FORBIDDEN
+                message: "You can only access your own assignments"
+                your_role: "teacher"
+                timestamp: "2025-11-12T10:00:00Z"
     
     NotFound:
       description: Ressource introuvable
