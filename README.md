@@ -1,6 +1,6 @@
 # 🎓 Study-mate School Orchestrator
 
-**Version** : 1.0.0 (MVP - Sprint 0 + Sprint 1 + Sprint 2 + Sprint 3 + Sprint 4)  
+**Version** : 1.0.0 (MVP - Sprint 0 + Sprint 1 + Sprint 2 + Sprint 3)  
 **Date** : 2025-11-12  
 **Auteur** : Mehdy Driouech
 
