@@ -76,6 +76,10 @@ tags:
     description: Génération IA de contenus
   - name: Webhooks
     description: Réceptions d'événements Ergo-Mate
+  - name: Partners
+    description: Gestion des clés API et usage partenaires
+  - name: Telemetry
+    description: Télémétrie et observabilité API
 
 paths:
   /api/health:
@@ -606,6 +610,122 @@ paths:
           description: Reçu
       security: []
 
+  /api/partners/usage:
+    get:
+      tags: [Partners]
+      summary: Usage des clés API partenaires
+      description: |
+        Retourne les statistiques d'usage, rate limits et quotas des clés API.
+        Nécessite le rôle admin ou direction.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: api_key_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par ID de clé API spécifique
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (YYYY-MM-DD)
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Statistiques d'usage des partenaires
+          headers:
+            X-Request-ID:
+              schema:
+                type: string
+              description: ID unique de la requête pour corrélation
+            X-Response-Time:
+              schema:
+                type: string
+              description: Temps de réponse en millisecondes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PartnersUsage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/telemetry/stats:
+    get:
+      tags: [Telemetry]
+      summary: Statistiques de télémétrie API
+      description: |
+        Retourne les métriques de performance, erreurs et observabilité.
+        Nécessite le rôle admin ou direction.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: view
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [overview, endpoints, errors, performance]
+          description: Type de vue télémétrie
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (YYYY-MM-DD)
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (YYYY-MM-DD)
+        - name: endpoint
+          in: query
+          schema:
+            type: string
+          description: Filtrer par endpoint spécifique (pour vue performance)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+          description: Limite de résultats
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Statistiques de télémétrie
+          headers:
+            X-Request-ID:
+              schema:
+                type: string
+              description: ID unique de la requête pour corrélation
+            X-Response-Time:
+              schema:
+                type: string
+              description: Temps de réponse en millisecondes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryStats'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
 components:
   securitySchemes:
     urlEncodedAuth:
@@ -733,11 +853,87 @@ components:
             $ref: '#/components/schemas/Error'
     
     TooManyRequests:
-      description: Rate limit atteinte
+      description: Rate limit atteinte - quota dépassé
+      headers:
+        X-RateLimit-Limit:
+          schema:
+            type: integer
+          description: Limite de requêtes (par minute)
+        X-RateLimit-Remaining:
+          schema:
+            type: integer
+          description: Requêtes restantes dans la fenêtre actuelle
+        X-RateLimit-Reset:
+          schema:
+            type: integer
+          description: Timestamp Unix de réinitialisation du compteur
+        X-RateLimit-Limit-Hour:
+          schema:
+            type: integer
+          description: Limite horaire
+        X-RateLimit-Remaining-Hour:
+          schema:
+            type: integer
+          description: Requêtes restantes cette heure
+        X-RateLimit-Limit-Day:
+          schema:
+            type: integer
+          description: Limite quotidienne
+        X-RateLimit-Remaining-Day:
+          schema:
+            type: integer
+          description: Requêtes restantes aujourd'hui
+        Retry-After:
+          schema:
+            type: integer
+          description: Nombre de secondes avant de réessayer
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            allOf:
+              - $ref: '#/components/schemas/Error'
+              - type: object
+                properties:
+                  retry_after:
+                    type: integer
+                    description: Secondes avant de réessayer
+                  reset_at:
+                    type: string
+                    format: date-time
+                    description: Date/heure de réinitialisation
+                  limits:
+                    type: object
+                    properties:
+                      minute:
+                        type: integer
+                      hour:
+                        type: integer
+                      day:
+                        type: integer
+                  remaining:
+                    type: object
+                    properties:
+                      minute:
+                        type: integer
+                      hour:
+                        type: integer
+                      day:
+                        type: integer
+          examples:
+            rate_limit_exceeded:
+              value:
+                code: RATE_LIMIT_EXCEEDED
+                message: "Rate limit exceeded. Please retry after the reset time."
+                retry_after: 45
+                reset_at: "2025-11-12T10:15:00Z"
+                limits:
+                  minute: 60
+                  hour: 1000
+                  day: 10000
+                remaining:
+                  minute: 0
+                  hour: 234
+                  day: 5678
 
   schemas:
     Error:
@@ -1102,3 +1298,344 @@ components:
           type: integer
         offset:
           type: integer
+
+    # Sprint 4: Partners & Telemetry schemas
+    PartnersUsage:
+      type: object
+      description: Statistiques d'usage des clés API partenaires
+      properties:
+        tenant_id:
+          type: string
+        period:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+        summary:
+          type: object
+          properties:
+            total_api_keys:
+              type: integer
+            active_api_keys:
+              type: integer
+            total_requests:
+              type: integer
+            successful_requests:
+              type: integer
+            failed_requests:
+              type: integer
+            success_rate:
+              type: number
+              format: float
+            avg_duration_ms:
+              type: number
+              format: float
+        api_keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKeyUsage'
+
+    ApiKeyUsage:
+      type: object
+      description: Usage détaillé d'une clé API
+      properties:
+        id:
+          type: string
+        owner:
+          type: string
+        scopes:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [active, suspended, revoked]
+        quotas:
+          type: object
+          properties:
+            daily:
+              type: integer
+            per_hour:
+              type: integer
+            per_minute:
+              type: integer
+        rate_limit_status:
+          type: object
+          properties:
+            limits:
+              type: object
+              additionalProperties:
+                type: integer
+            current:
+              type: object
+              additionalProperties:
+                type: integer
+            remaining:
+              type: object
+              additionalProperties:
+                type: integer
+            reset_at:
+              type: object
+              additionalProperties:
+                type: integer
+        usage:
+          type: object
+          properties:
+            total_requests:
+              type: integer
+            successful_requests:
+              type: integer
+            failed_requests:
+              type: integer
+            success_rate:
+              type: number
+            avg_duration_ms:
+              type: number
+            max_duration_ms:
+              type: number
+            first_request:
+              type: string
+              format: date-time
+            last_request:
+              type: string
+              format: date-time
+        daily_usage:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              requests:
+                type: integer
+              successful:
+                type: integer
+              failed:
+                type: integer
+              avg_duration_ms:
+                type: number
+        top_endpoints:
+          type: array
+          items:
+            type: object
+            properties:
+              endpoint:
+                type: string
+              requests:
+                type: integer
+              avg_duration_ms:
+                type: number
+              errors:
+                type: integer
+        recent_errors:
+          type: array
+          items:
+            type: object
+            properties:
+              request_id:
+                type: string
+              method:
+                type: string
+              endpoint:
+                type: string
+              status_code:
+                type: integer
+              error_message:
+                type: string
+              error_code:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+
+    TelemetryStats:
+      type: object
+      description: Statistiques de télémétrie API
+      properties:
+        tenant_id:
+          type: string
+        period:
+          type: object
+          properties:
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+        view:
+          type: string
+          enum: [overview, endpoints, errors, performance]
+        overview:
+          type: object
+          description: Vue d'ensemble (view=overview)
+          properties:
+            total_requests:
+              type: integer
+            active_days:
+              type: integer
+            successful_requests:
+              type: integer
+            client_errors:
+              type: integer
+            server_errors:
+              type: integer
+            avg_duration_ms:
+              type: number
+            max_duration_ms:
+              type: number
+            avg_db_queries:
+              type: number
+            avg_db_time_ms:
+              type: number
+        daily_stats:
+          type: array
+          description: Statistiques quotidiennes
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              requests:
+                type: integer
+              successful:
+                type: integer
+              errors:
+                type: integer
+              avg_duration_ms:
+                type: number
+              max_duration_ms:
+                type: number
+        hourly_stats:
+          type: array
+          description: Distribution horaire (24h)
+          items:
+            type: object
+            properties:
+              hour:
+                type: integer
+              requests:
+                type: integer
+              avg_duration_ms:
+                type: number
+        endpoints:
+          type: array
+          description: Statistiques par endpoint (view=endpoints)
+          items:
+            type: object
+            properties:
+              endpoint:
+                type: string
+              total_requests:
+                type: integer
+              successful_requests:
+                type: integer
+              failed_requests:
+                type: integer
+              avg_duration_ms:
+                type: number
+              max_duration_ms:
+                type: number
+              avg_db_queries:
+                type: number
+              avg_db_time_ms:
+                type: number
+              error_rate_pct:
+                type: number
+        error_groups:
+          type: array
+          description: Groupes d'erreurs (view=errors)
+          items:
+            type: object
+            properties:
+              status_code:
+                type: integer
+              error_code:
+                type: string
+              endpoint:
+                type: string
+              occurrences:
+                type: integer
+              error_message:
+                type: string
+        recent_errors:
+          type: array
+          description: Erreurs récentes (view=errors)
+          items:
+            type: object
+            properties:
+              request_id:
+                type: string
+              method:
+                type: string
+              endpoint:
+                type: string
+              status_code:
+                type: integer
+              error_code:
+                type: string
+              error_message:
+                type: string
+              duration_ms:
+                type: number
+              ip_address:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+        slow_queries:
+          type: array
+          description: Requêtes lentes (view=performance)
+          items:
+            type: object
+            properties:
+              request_id:
+                type: string
+              method:
+                type: string
+              endpoint:
+                type: string
+              status_code:
+                type: integer
+              duration_ms:
+                type: number
+              db_queries:
+                type: integer
+              db_time_ms:
+                type: number
+              created_at:
+                type: string
+                format: date-time
+        endpoint_performance:
+          type: array
+          description: Performance par endpoint (view=performance)
+          items:
+            type: object
+            properties:
+              endpoint:
+                type: string
+              total_requests:
+                type: integer
+              avg_duration_ms:
+                type: number
+              max_duration_ms:
+                type: number
+              avg_db_queries:
+                type: number
+              avg_db_time_ms:
+                type: number
