@@ -399,17 +399,25 @@ $text",
 class SchemaValidator {
     /**
      * Valider un thème contre le schéma ErgoMate
+     *
+     * @param array $data Données du thème
+     * @param bool $strictErgoMate Validation stricte contre schéma Ergo-Mate complet
+     * @return array Résultat de validation
      */
-    public function validateTheme($data) {
+    public function validateTheme($data, $strictErgoMate = false) {
         $errors = [];
 
         // Vérifier les champs obligatoires
         if (empty($data['title'])) {
             $errors[] = 'Missing required field: title';
+        } elseif (strlen($data['title']) < 3 || strlen($data['title']) > 255) {
+            $errors[] = 'Title must be between 3 and 255 characters';
         }
 
         if (empty($data['description'])) {
             $errors[] = 'Missing required field: description';
+        } elseif (strlen($data['description']) < 10 || strlen($data['description']) > 2000) {
+            $errors[] = 'Description must be between 10 and 2000 characters';
         }
 
         if (empty($data['difficulty'])) {
@@ -418,42 +426,193 @@ class SchemaValidator {
             $errors[] = 'Invalid difficulty value';
         }
 
+        // Validation Ergo-Mate stricte
+        if ($strictErgoMate) {
+            if (empty($data['content_type'])) {
+                $errors[] = 'Missing required field: content_type';
+            } elseif (!in_array($data['content_type'], ['complete', 'quiz', 'flashcards', 'fiche'])) {
+                $errors[] = 'Invalid content_type value';
+            }
+
+            // Vérifier qu'il y a au moins du contenu
+            $hasContent = !empty($data['questions']) || !empty($data['flashcards']) || !empty($data['fiche']);
+            if (!$hasContent) {
+                $errors[] = 'Theme must have at least questions, flashcards, or fiche';
+            }
+        }
+
         // Valider les questions
         if (isset($data['questions'])) {
-            foreach ($data['questions'] as $i => $q) {
-                if (empty($q['id'])) {
-                    $errors[] = "Question $i: missing id";
-                }
-                if (empty($q['text'])) {
-                    $errors[] = "Question $i: missing text";
-                }
-                if (!isset($q['choices']) || count($q['choices']) < 2) {
-                    $errors[] = "Question $i: must have at least 2 choices";
-                }
-                if (!isset($q['correctAnswer']) || !is_int($q['correctAnswer'])) {
-                    $errors[] = "Question $i: missing or invalid correctAnswer";
+            if (!is_array($data['questions']) || empty($data['questions'])) {
+                $errors[] = 'Questions must be a non-empty array';
+            } else {
+                foreach ($data['questions'] as $i => $q) {
+                    if (empty($q['id'])) {
+                        $errors[] = "Question $i: missing id";
+                    } elseif (!preg_match('/^q[0-9]+$/', $q['id'])) {
+                        $errors[] = "Question $i: id must match pattern 'q[0-9]+'";
+                    }
+
+                    if (empty($q['text'])) {
+                        $errors[] = "Question $i: missing text";
+                    } elseif (strlen($q['text']) < 5 || strlen($q['text']) > 1000) {
+                        $errors[] = "Question $i: text must be between 5 and 1000 characters";
+                    }
+
+                    if (!isset($q['choices']) || !is_array($q['choices'])) {
+                        $errors[] = "Question $i: missing choices array";
+                    } elseif (count($q['choices']) < 2 || count($q['choices']) > 6) {
+                        $errors[] = "Question $i: must have between 2 and 6 choices";
+                    }
+
+                    if (!isset($q['correctAnswer']) || !is_int($q['correctAnswer'])) {
+                        $errors[] = "Question $i: missing or invalid correctAnswer (must be integer)";
+                    } elseif (isset($q['choices']) && ($q['correctAnswer'] < 0 || $q['correctAnswer'] >= count($q['choices']))) {
+                        $errors[] = "Question $i: correctAnswer out of range";
+                    }
                 }
             }
         }
 
         // Valider les flashcards
         if (isset($data['flashcards'])) {
-            foreach ($data['flashcards'] as $i => $f) {
-                if (empty($f['id'])) {
-                    $errors[] = "Flashcard $i: missing id";
+            if (!is_array($data['flashcards'])) {
+                $errors[] = 'Flashcards must be an array';
+            } else {
+                foreach ($data['flashcards'] as $i => $f) {
+                    if (empty($f['id'])) {
+                        $errors[] = "Flashcard $i: missing id";
+                    } elseif (!preg_match('/^f[0-9]+$/', $f['id'])) {
+                        $errors[] = "Flashcard $i: id must match pattern 'f[0-9]+'";
+                    }
+
+                    if (empty($f['front'])) {
+                        $errors[] = "Flashcard $i: missing front";
+                    } elseif (strlen($f['front']) < 3 || strlen($f['front']) > 500) {
+                        $errors[] = "Flashcard $i: front must be between 3 and 500 characters";
+                    }
+
+                    if (empty($f['back'])) {
+                        $errors[] = "Flashcard $i: missing back";
+                    } elseif (strlen($f['back']) < 3 || strlen($f['back']) > 2000) {
+                        $errors[] = "Flashcard $i: back must be between 3 and 2000 characters";
+                    }
                 }
-                if (empty($f['front'])) {
-                    $errors[] = "Flashcard $i: missing front";
-                }
-                if (empty($f['back'])) {
-                    $errors[] = "Flashcard $i: missing back";
+            }
+        }
+
+        // Valider la fiche
+        if (isset($data['fiche'])) {
+            if (!is_array($data['fiche'])) {
+                $errors[] = 'Fiche must be an object';
+            } else {
+                if (empty($data['fiche']['sections'])) {
+                    $errors[] = 'Fiche: missing sections';
+                } elseif (!is_array($data['fiche']['sections'])) {
+                    $errors[] = 'Fiche: sections must be an array';
+                } elseif (count($data['fiche']['sections']) === 0) {
+                    $errors[] = 'Fiche: sections must have at least one section';
+                } elseif (count($data['fiche']['sections']) > 20) {
+                    $errors[] = 'Fiche: sections must have at most 20 sections';
+                } else {
+                    foreach ($data['fiche']['sections'] as $i => $section) {
+                        if (empty($section['title'])) {
+                            $errors[] = "Fiche section $i: missing title";
+                        } elseif (strlen($section['title']) < 3 || strlen($section['title']) > 255) {
+                            $errors[] = "Fiche section $i: title must be between 3 and 255 characters";
+                        }
+
+                        if (empty($section['content'])) {
+                            $errors[] = "Fiche section $i: missing content";
+                        } elseif (strlen($section['content']) < 10 || strlen($section['content']) > 5000) {
+                            $errors[] = "Fiche section $i: content must be between 10 and 5000 characters";
+                        }
+
+                        if (isset($section['keyPoints'])) {
+                            if (!is_array($section['keyPoints'])) {
+                                $errors[] = "Fiche section $i: keyPoints must be an array";
+                            } elseif (count($section['keyPoints']) > 10) {
+                                $errors[] = "Fiche section $i: keyPoints must have at most 10 items";
+                            }
+                        }
+                    }
                 }
             }
         }
 
         return [
             'valid' => empty($errors),
-            'errors' => $errors
+            'errors' => $errors,
+            'ergomate_compliant' => empty($errors) && $strictErgoMate
         ];
     }
+
+    /**
+     * Enrichir un thème avec des suggestions d'images
+     *
+     * @param array $theme Données du thème
+     * @return array Thème enrichi avec suggestions d'images
+     */
+    public function enrichWithImageSuggestions($theme) {
+        $imageSuggestions = [];
+
+        // Suggérer des images pour les questions
+        if (isset($theme['questions'])) {
+            foreach ($theme['questions'] as $i => $question) {
+                // Extraire des mots-clés de la question
+                $keywords = $this->extractKeywords($question['text']);
+                if (!empty($keywords)) {
+                    $imageSuggestions['questions'][$question['id']] = [
+                        'keywords' => $keywords,
+                        'search_query' => implode(' ', $keywords),
+                        'suggested_sources' => [
+                            'unsplash' => "https://source.unsplash.com/800x600/?" . urlencode(implode(',', $keywords)),
+                            'pexels' => "https://www.pexels.com/search/" . urlencode(implode(' ', $keywords))
+                        ]
+                    ];
+                }
+            }
+        }
+
+        // Suggérer des images pour les sections de fiche
+        if (isset($theme['fiche']['sections'])) {
+            foreach ($theme['fiche']['sections'] as $i => $section) {
+                $keywords = $this->extractKeywords($section['title'] . ' ' . substr($section['content'], 0, 200));
+                if (!empty($keywords)) {
+                    $imageSuggestions['fiche_sections'][$i] = [
+                        'keywords' => $keywords,
+                        'search_query' => implode(' ', $keywords),
+                        'suggested_sources' => [
+                            'unsplash' => "https://source.unsplash.com/1200x800/?" . urlencode(implode(',', $keywords)),
+                            'pexels' => "https://www.pexels.com/search/" . urlencode(implode(' ', $keywords))
+                        ]
+                    ];
+                }
+            }
+        }
+
+        return $imageSuggestions;
+    }
+
+    /**
+     * Extraire des mots-clés d'un texte pour suggestions d'images
+     */
+    private function extractKeywords($text) {
+        // Mots vides courants en français
+        $stopWords = ['le', 'la', 'les', 'un', 'une', 'des', 'de', 'du', 'et', 'ou', 'est', 'sont', 'a', 'à', 'en', 'dans', 'sur', 'pour', 'par', 'avec', 'ce', 'qui', 'que', 'quoi', 'comment', 'pourquoi'];
+
+        // Nettoyer et tokeniser
+        $text = strtolower($text);
+        $text = preg_replace('/[^\p{L}\s]/u', ' ', $text);
+        $words = preg_split('/\s+/', $text);
+
+        // Filtrer les mots vides et courts
+        $keywords = array_filter($words, function($word) use ($stopWords) {
+            return strlen($word) > 3 && !in_array($word, $stopWords);
+        });
+
+        // Retourner les 3 premiers mots-clés
+        return array_slice(array_values($keywords), 0, 3);
+    }
 }
+

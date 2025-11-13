@@ -1,0 +1,274 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://ergomate.fr/schemas/theme.v1.json",
+  "title": "Ergo-Mate Theme Schema",
+  "description": "Schéma JSON pour les thèmes pédagogiques Ergo-Mate compatible avec la génération IA",
+  "type": "object",
+  "required": ["title", "description", "difficulty", "content_type"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 255,
+      "description": "Titre du thème pédagogique"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 2000,
+      "description": "Description détaillée du thème"
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"],
+      "description": "Niveau de difficulté du thème"
+    },
+    "content_type": {
+      "type": "string",
+      "enum": ["complete", "quiz", "flashcards", "fiche"],
+      "description": "Type de contenu pédagogique"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Matière ou domaine (ex: Mathématiques, Histoire, Biologie)"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 10,
+      "description": "Tags pour catégorisation"
+    },
+    "estimated_duration_minutes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 300,
+      "description": "Durée estimée en minutes"
+    },
+    "questions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/question"
+      },
+      "description": "Liste des questions QCM"
+    },
+    "flashcards": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/flashcard"
+      },
+      "description": "Liste des flashcards"
+    },
+    "fiche": {
+      "$ref": "#/definitions/fiche",
+      "description": "Fiche de révision structurée"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "author": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "enum": ["manual", "ai_generated", "imported"]
+        },
+        "ai_model": {
+          "type": "string",
+          "description": "Modèle IA utilisé (ex: mistral-medium)"
+        },
+        "generation_date": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "version": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "question": {
+      "type": "object",
+      "required": ["id", "text", "choices", "correctAnswer"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^q[0-9]+$",
+          "description": "Identifiant unique (ex: q1, q2, ...)"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 1000,
+          "description": "Texte de la question"
+        },
+        "choices": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "description": "Choix de réponses"
+        },
+        "correctAnswer": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Index de la bonne réponse (0-based)"
+        },
+        "explanation": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Explication de la réponse correcte"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "points": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "default": 10
+        },
+        "time_limit_seconds": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 600
+        },
+        "image_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL d'une image illustrative (optionnel)"
+        }
+      }
+    },
+    "flashcard": {
+      "type": "object",
+      "required": ["id", "front", "back"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^f[0-9]+$",
+          "description": "Identifiant unique (ex: f1, f2, ...)"
+        },
+        "front": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 500,
+          "description": "Face avant de la carte (question/concept)"
+        },
+        "back": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 2000,
+          "description": "Face arrière de la carte (réponse/définition)"
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["easy", "medium", "hard"]
+        },
+        "image_front_url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "image_back_url": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "fiche": {
+      "type": "object",
+      "required": ["sections"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "maxLength": 255
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Résumé global de la fiche"
+        },
+        "sections": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "$ref": "#/definitions/ficheSection"
+          }
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["book", "article", "video", "website"]
+              }
+            }
+          }
+        }
+      }
+    },
+    "ficheSection": {
+      "type": "object",
+      "required": ["title", "content"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 255,
+          "description": "Titre de la section"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 5000,
+          "description": "Contenu détaillé (supporte Markdown)"
+        },
+        "keyPoints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "maxItems": 10,
+          "description": "Points clés à retenir"
+        },
+        "examples": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Exemples concrets"
+        },
+        "image_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL d'une illustration pour cette section"
+        },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ordre d'affichage de la section"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}
