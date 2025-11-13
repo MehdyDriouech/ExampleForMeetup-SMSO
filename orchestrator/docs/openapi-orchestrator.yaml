@@ -100,6 +100,8 @@ tags:
     description: 'Sprint 10: Coach Pédagogique - Assistant IA pour enseignants'
   - name: Publish
     description: 'Sprint 10: Publication Ergo-Mate - Publication de thèmes vers catalogue/affectations'
+  - name: Catalog
+    description: 'Sprint 12: Pedagogical Library - Catalogue interne de thèmes validés et versionnés, accessible aux enseignants du même établissement'
 
 paths:
   /api/health:

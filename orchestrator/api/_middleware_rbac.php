@@ -128,6 +128,17 @@ const RBAC_PERMISSIONS = [
     'telemetry' => [
         'read' => ['admin', 'direction'],  // View API telemetry
     ],
+
+    // Catalog (Sprint 12 - Pedagogical Library)
+    'catalog' => [
+        'read' => ['admin', 'teacher', 'direction', 'inspector', 'referent', 'intervenant'],  // View catalog
+        'submit' => ['admin', 'teacher', 'direction'],  // Submit theme for validation
+        'validate' => ['admin', 'direction', 'referent'],  // Validate or reject themes
+        'publish' => ['admin', 'direction'],  // Publish validated themes
+        'archive' => ['admin', 'direction'],  // Archive themes
+        'update' => ['admin', 'direction'],  // Update catalog entries
+        'publish_to_ergo' => ['admin', 'teacher', 'direction'],  // Push to Ergo-Mate
+    ],
 ];
 
 /**
