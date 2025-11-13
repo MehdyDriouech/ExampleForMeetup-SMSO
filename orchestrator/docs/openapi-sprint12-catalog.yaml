@@ -1,0 +1,670 @@
+# ============================================================================
+# Sprint 12 - Pedagogical Library
+# OpenAPI Paths: Internal Catalog Endpoints
+# ============================================================================
+
+# GET /api/catalog/list - Liste des thèmes du catalogue
+/api/catalog/list:
+  get:
+    tags:
+      - Catalog
+    summary: Liste des thèmes du catalogue interne
+    description: |
+      Récupère la liste des thèmes validés et partagés au niveau établissement.
+      Filtres disponibles: titre, tags, matière, niveau, difficulté, statut.
+    operationId: listCatalogThemes
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: search
+        in: query
+        description: Recherche textuelle (titre, description, tags)
+        schema:
+          type: string
+      - name: subject
+        in: query
+        description: Filtrer par matière
+        schema:
+          type: string
+          enum: [mathematiques, francais, histoire_geo, sciences, anglais, physique_chimie, svt]
+      - name: level
+        in: query
+        description: Filtrer par niveau
+        schema:
+          type: string
+          enum: [6eme, 5eme, 4eme, 3eme, seconde, premiere, terminale]
+      - name: difficulty
+        in: query
+        description: Filtrer par difficulté
+        schema:
+          type: string
+          enum: [beginner, intermediate, advanced]
+      - name: status
+        in: query
+        description: Filtrer par statut workflow
+        schema:
+          type: string
+          enum: [draft, proposed, validated, published, rejected, archived]
+          default: published
+      - name: tags
+        in: query
+        description: Filtrer par tags (comma-separated)
+        schema:
+          type: string
+      - name: order_by
+        in: query
+        description: Tri
+        schema:
+          type: string
+          enum: [title, updated_at, created_at, published_at]
+          default: updated_at
+      - name: order_dir
+        in: query
+        description: Direction du tri
+        schema:
+          type: string
+          enum: [ASC, DESC]
+          default: DESC
+      - name: limit
+        in: query
+        description: Limite de résultats
+        schema:
+          type: integer
+          default: 50
+      - name: offset
+        in: query
+        description: Offset pour pagination
+        schema:
+          type: integer
+          default: 0
+    responses:
+      '200':
+        description: Liste des thèmes du catalogue
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                catalog_entries:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CatalogEntry'
+                count:
+                  type: integer
+      '401':
+        $ref: '#/components/responses/Unauthorized'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+
+# GET /api/catalog/{id} - Détails d'un thème
+/api/catalog/{id}:
+  get:
+    tags:
+      - Catalog
+    summary: Détails d'un thème du catalogue
+    description: Récupère les détails complets d'un thème, incluant contenu, versions et historique workflow
+    operationId: getCatalogTheme
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        description: ID de l'entrée catalogue
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Détails du thème
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                catalog_entry:
+                  $ref: '#/components/schemas/CatalogEntryDetailed'
+      '404':
+        $ref: '#/components/responses/NotFound'
+
+# POST /api/catalog/submit - Proposer un thème pour validation
+/api/catalog/submit:
+  post:
+    tags:
+      - Catalog
+    summary: Proposer un thème pour validation
+    description: |
+      Permet à un enseignant de soumettre un thème pour validation par un référent.
+      Le thème passe du statut 'draft' à 'proposed'.
+    operationId: submitThemeForValidation
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - catalog_entry_id
+            properties:
+              catalog_entry_id:
+                type: string
+              comment:
+                type: string
+    responses:
+      '200':
+        description: Thème soumis avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                catalog_entry_id:
+                  type: string
+                previous_status:
+                  type: string
+                new_status:
+                  type: string
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+
+# PATCH /api/catalog/validate - Valider ou rejeter un thème
+/api/catalog/validate:
+  patch:
+    tags:
+      - Catalog
+    summary: Valider ou rejeter un thème
+    description: |
+      Permet à un référent de valider ou rejeter un thème proposé.
+      Actions: 'validate' ou 'reject'.
+      Un commentaire est obligatoire en cas de rejet.
+    operationId: validateCatalogTheme
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - catalog_entry_id
+              - action
+            properties:
+              catalog_entry_id:
+                type: string
+              action:
+                type: string
+                enum: [validate, reject]
+              comment:
+                type: string
+                description: Obligatoire si action=reject
+    responses:
+      '200':
+        description: Action effectuée avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                catalog_entry_id:
+                  type: string
+                previous_status:
+                  type: string
+                new_status:
+                  type: string
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '403':
+        $ref: '#/components/responses/Forbidden'
+
+# POST /api/catalog/publish - Publier un thème validé
+/api/catalog/publish:
+  post:
+    tags:
+      - Catalog
+    summary: Publier un thème validé au catalogue
+    description: |
+      Permet à la direction de publier un thème validé.
+      Le thème devient accessible à tous les enseignants du tenant.
+    operationId: publishCatalogTheme
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - catalog_entry_id
+            properties:
+              catalog_entry_id:
+                type: string
+              comment:
+                type: string
+    responses:
+      '200':
+        description: Thème publié avec succès
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                catalog_entry_id:
+                  type: string
+      '403':
+        $ref: '#/components/responses/Forbidden'
+
+# DELETE /api/catalog/{id}/archive - Archiver un thème
+/api/catalog/{id}/archive:
+  delete:
+    tags:
+      - Catalog
+    summary: Archiver un thème
+    description: Permet à la direction d'archiver un thème (ne sera plus visible)
+    operationId: archiveCatalogTheme
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    requestBody:
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              reason:
+                type: string
+    responses:
+      '200':
+        description: Thème archivé
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+
+# GET /api/catalog/{id}/versions - Historique des versions
+/api/catalog/{id}/versions:
+  get:
+    tags:
+      - Catalog
+    summary: Historique des versions d'un thème
+    description: Liste toutes les versions d'un thème du catalogue
+    operationId: getCatalogThemeVersions
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          default: 20
+    responses:
+      '200':
+        description: Liste des versions
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                versions:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/CatalogVersion'
+
+# POST /api/catalog/{id}/versions/{versionId}/rollback - Restaurer une version
+/api/catalog/{id}/versions/{versionId}/rollback:
+  post:
+    tags:
+      - Catalog
+    summary: Restaurer une version antérieure
+    description: Rollback vers une version précédente d'un thème
+    operationId: rollbackCatalogVersion
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: versionId
+        in: path
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Version restaurée
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+
+# POST /api/catalog/publish-to-ergo - Publier vers Ergo-Mate
+/api/catalog/publish-to-ergo:
+  post:
+    tags:
+      - Catalog
+    summary: Publier un thème vers Ergo-Mate
+    description: |
+      Pousse un thème du catalogue vers Ergo-Mate pour affectation aux élèves.
+      Seuls les thèmes publiés peuvent être envoyés.
+    operationId: publishThemeToErgoMate
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - catalog_entry_id
+              - class_ids
+            properties:
+              catalog_entry_id:
+                type: string
+              class_ids:
+                type: array
+                items:
+                  type: string
+    responses:
+      '200':
+        description: Thème publié vers Ergo-Mate
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                message:
+                  type: string
+                ergo_response:
+                  type: object
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '500':
+        $ref: '#/components/responses/InternalServerError'
+
+# GET /api/catalog/stats - Statistiques du catalogue
+/api/catalog/stats:
+  get:
+    tags:
+      - Catalog
+    summary: Statistiques du catalogue
+    description: Récupère les statistiques du catalogue (par statut, total, etc.)
+    operationId: getCatalogStats
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: X-Tenant-Id
+        in: header
+        required: true
+        schema:
+          type: string
+    responses:
+      '200':
+        description: Statistiques du catalogue
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                tenant_id:
+                  type: string
+                total_entries:
+                  type: integer
+                by_status:
+                  type: object
+                  additionalProperties:
+                    type: integer
+
+# ============================================================================
+# Schemas
+# ============================================================================
+
+components:
+  schemas:
+    CatalogEntry:
+      type: object
+      properties:
+        id:
+          type: string
+        tenant_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        subject:
+          type: string
+        level:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        tags:
+          type: array
+          items:
+            type: string
+        workflow_status:
+          type: string
+          enum: [draft, proposed, validated, published, rejected, archived]
+        author_name:
+          type: string
+        author_email:
+          type: string
+        version_label:
+          type: string
+        version_number:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        published_at:
+          type: string
+          format: date-time
+
+    CatalogEntryDetailed:
+      allOf:
+        - $ref: '#/components/schemas/CatalogEntry'
+        - type: object
+          properties:
+            theme_content:
+              type: object
+              description: Contenu complet du thème (questions, flashcards, fiches)
+            workflow_history:
+              type: array
+              items:
+                $ref: '#/components/schemas/WorkflowTransition'
+            versions:
+              type: array
+              items:
+                $ref: '#/components/schemas/CatalogVersion'
+
+    CatalogVersion:
+      type: object
+      properties:
+        id:
+          type: string
+        catalog_entry_id:
+          type: string
+        version_number:
+          type: integer
+        version_label:
+          type: string
+        change_summary:
+          type: string
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    WorkflowTransition:
+      type: object
+      properties:
+        id:
+          type: string
+        catalog_entry_id:
+          type: string
+        from_status:
+          type: string
+        to_status:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+  responses:
+    Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    Forbidden:
+      description: Permission refusée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    BadRequest:
+      description: Requête invalide
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    InternalServerError:
+      description: Erreur serveur
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
