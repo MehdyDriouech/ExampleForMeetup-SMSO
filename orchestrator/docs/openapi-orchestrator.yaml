@@ -80,6 +80,8 @@ tags:
     description: Gestion des clés API et usage partenaires
   - name: Telemetry
     description: Télémétrie et observabilité API
+  - name: Student
+    description: 'Sprint 5: Learning Cycle - Endpoints côté élève (missions, progression, badges, révisions)'
 
 paths:
   /api/health:
@@ -725,6 +727,284 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  # ============================================================
+  # Sprint 5: Learning Cycle - Student Endpoints
+  # ============================================================
+
+  /api/student/missions/pull:
+    get:
+      tags: [Student]
+      summary: 'E5-MISSIONS: Pull student missions inbox'
+      description: |
+        Récupère la liste des missions (assignments) pour un élève.
+        Inclut le statut local (a_faire, en_cours, terminee) et la progression.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID de l'élève
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des missions de l'élève
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentMissions'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/student/missions/{id}/status:
+    patch:
+      tags: [Student]
+      summary: 'E5-MISSIONS: Update mission status locally'
+      description: |
+        Met à jour le statut local d'une mission (a_faire, en_cours, terminee).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id, status]
+              properties:
+                student_id:
+                  type: string
+                status:
+                  type: string
+                  enum: [a_faire, en_cours, terminee]
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Statut mis à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  status:
+                    type: string
+                  new_status:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/student/sync/push:
+    post:
+      tags: [Student]
+      summary: 'E5-SYNC: Push student session results'
+      description: |
+        Pousse les résultats d'une session élève vers l'Orchestrator.
+        Auto-sync après chaque session ErgoMate avec retry/backoff.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentSyncPush'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudentSyncPush'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '202':
+          description: Résultats acceptés et synchronisés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  session_id:
+                    type: string
+                  sync_log_id:
+                    type: string
+                  new_badges:
+                    type: array
+                    items:
+                      type: object
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /api/student/{id}/progress:
+    get:
+      tags: [Student]
+      summary: 'E5-PROGRESS: Get student progress dashboard'
+      description: |
+        Dashboard élève avec KPIs, graphiques (score trend, time by theme, mastery radar),
+        analyse des forces/faiblesses, et activité récente.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Dashboard de progression élève
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentProgress'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/student/{id}/review:
+    get:
+      tags: [Student]
+      summary: 'E5-REVIEW: Get items to review (errors)'
+      description: |
+        Récupère les questions/concepts à réviser basés sur les erreurs passées.
+        Permet de rejouer les erreurs avec les rationales.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: theme_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par thème
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des items à réviser
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentReview'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/student/{id}/review/session:
+    post:
+      tags: [Student]
+      summary: 'E5-REVIEW: Create review session'
+      description: |
+        Crée une session de révision pour un élève sur un thème spécifique.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [theme_id, items]
+              properties:
+                theme_id:
+                  type: string
+                items:
+                  type: array
+                  items:
+                    type: object
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '201':
+          description: Session de révision créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  status:
+                    type: string
+                  items_count:
+                    type: integer
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/student/{id}/badges:
+    get:
+      tags: [Student]
+      summary: 'E5-BADGES: Get student badges'
+      description: |
+        Récupère les badges gagnés et disponibles pour un élève.
+        Inclut la progression vers chaque badge disponible.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Badges de l'élève
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentBadges'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
 components:
   securitySchemes:
@@ -1639,3 +1919,393 @@ components:
                 type: number
               avg_db_time_ms:
                 type: number
+
+    # ============================================================
+    # Sprint 5: Student schemas
+    # ============================================================
+
+    StudentMissions:
+      type: object
+      description: 'E5-MISSIONS: Liste des missions d''un élève'
+      properties:
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+            uuid_scolaire:
+              type: string
+        missions:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              type:
+                type: string
+                enum: [quiz, flashcards, fiche, annales]
+              mode:
+                type: string
+              due_at:
+                type: string
+                format: date-time
+              instructions:
+                type: string
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              theme_difficulty:
+                type: string
+              teacher_name:
+                type: string
+              local_status:
+                type: string
+                enum: [a_faire, en_cours, terminee]
+              progress_percent:
+                type: number
+              is_overdue:
+                type: boolean
+              score:
+                type: number
+              time_spent:
+                type: integer
+        count:
+          type: integer
+        synced_at:
+          type: string
+          format: date-time
+
+    StudentSyncPush:
+      type: object
+      description: 'E5-SYNC: Données de sync pour une session élève'
+      required: [student_id, assignment_id, session_data]
+      properties:
+        student_id:
+          type: string
+        assignment_id:
+          type: string
+        session_data:
+          type: object
+          required: [score, time_spent, ended_at]
+          properties:
+            score:
+              type: number
+              description: Score en pourcentage (0-100)
+            time_spent:
+              type: integer
+              description: Temps en secondes
+            started_at:
+              type: string
+              format: date-time
+            ended_at:
+              type: string
+              format: date-time
+            errors:
+              type: array
+              description: Liste des erreurs commises
+              items:
+                type: object
+            correct_answers:
+              type: integer
+            mastery:
+              type: number
+              description: Niveau de maîtrise (0-1)
+
+    StudentProgress:
+      type: object
+      description: 'E5-PROGRESS: Dashboard de progression élève'
+      properties:
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+            email_scolaire:
+              type: string
+            class_name:
+              type: string
+        kpis:
+          type: object
+          properties:
+            total_sessions:
+              type: integer
+            completed_assignments:
+              type: integer
+            avg_score:
+              type: number
+            total_time_spent:
+              type: integer
+            sessions_last_7_days:
+              type: integer
+            overall_mastery:
+              type: number
+        charts:
+          type: object
+          properties:
+            score_trend:
+              type: object
+              properties:
+                labels:
+                  type: array
+                  items:
+                    type: string
+                values:
+                  type: array
+                  items:
+                    type: number
+            time_by_theme:
+              type: object
+              properties:
+                labels:
+                  type: array
+                  items:
+                    type: string
+                values:
+                  type: array
+                  items:
+                    type: integer
+            mastery_radar:
+              type: object
+              properties:
+                labels:
+                  type: array
+                  items:
+                    type: string
+                values:
+                  type: array
+                  items:
+                    type: number
+        recent_activity:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              score:
+                type: number
+              time_spent:
+                type: integer
+              completed_at:
+                type: string
+                format: date-time
+              assignment_title:
+                type: string
+              assignment_type:
+                type: string
+              theme_title:
+                type: string
+        analysis:
+          type: object
+          properties:
+            strengths:
+              type: array
+              items:
+                type: object
+                properties:
+                  theme_title:
+                    type: string
+                  mastery:
+                    type: number
+                  score:
+                    type: number
+                  attempts:
+                    type: integer
+            weaknesses:
+              type: array
+              items:
+                type: object
+                properties:
+                  theme_title:
+                    type: string
+                  mastery:
+                    type: number
+                  score:
+                    type: number
+                  attempts:
+                    type: integer
+        generated_at:
+          type: string
+          format: date-time
+
+    StudentReview:
+      type: object
+      description: 'E5-REVIEW: Items à réviser pour un élève'
+      properties:
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+        review_items:
+          type: array
+          items:
+            type: object
+            properties:
+              session_id:
+                type: string
+              assignment_id:
+                type: string
+              assignment_title:
+                type: string
+              assignment_type:
+                type: string
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              error:
+                type: object
+              completed_at:
+                type: string
+                format: date-time
+        count:
+          type: integer
+        errors_by_theme:
+          type: array
+          items:
+            type: object
+            properties:
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              error_count:
+                type: integer
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [low_mastery, frequent_errors]
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              reason:
+                type: string
+              priority:
+                type: string
+                enum: [low, medium, high]
+        generated_at:
+          type: string
+          format: date-time
+
+    StudentBadges:
+      type: object
+      description: 'E5-BADGES: Badges d''un élève'
+      properties:
+        student:
+          type: object
+          properties:
+            id:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+        earned_badges:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              badge_id:
+                type: string
+              badge_name:
+                type: string
+              badge_description:
+                type: string
+              badge_icon:
+                type: string
+              badge_category:
+                type: string
+              badge_tier:
+                type: string
+                enum: [bronze, silver, gold, platinum]
+              earned_at:
+                type: string
+                format: date-time
+              metadata:
+                type: object
+        available_badges:
+          type: array
+          items:
+            type: object
+            properties:
+              badge_id:
+                type: string
+              badge_name:
+                type: string
+              badge_description:
+                type: string
+              badge_icon:
+                type: string
+              badge_category:
+                type: string
+              badge_tier:
+                type: string
+              criteria:
+                type: object
+              progress:
+                type: object
+                properties:
+                  percent:
+                    type: number
+                  met_criteria:
+                    type: integer
+                  total_criteria:
+                    type: integer
+                  details:
+                    type: array
+                    items:
+                      type: object
+        recent_badges:
+          type: array
+          items:
+            type: object
+        statistics:
+          type: object
+          properties:
+            total_earned:
+              type: integer
+            total_available:
+              type: integer
+            by_category:
+              type: object
+            by_tier:
+              type: object
+        generated_at:
+          type: string
+          format: date-time
+
+    ServerError:
+      type: object
+      description: Erreur serveur
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
