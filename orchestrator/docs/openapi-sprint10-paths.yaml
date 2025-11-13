@@ -1,0 +1,603 @@
+# ============================================================
+# Sprint 10 - AI Copilot - OpenAPI Paths Definition
+# Date: 2025-11-13
+# À intégrer dans openapi-orchestrator.yaml
+# ============================================================
+
+  # ============================================================
+  # INGEST API - Upload et extraction de contenu
+  # ============================================================
+
+  /api/ingest/upload:
+    post:
+      tags: [Ingest]
+      summary: Upload et extraction de contenu (PDF/Audio)
+      description: Upload un fichier (PDF ou audio) et extrait automatiquement le texte
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Fichier PDF ou audio (MP3, WAV, M4A)
+      responses:
+        '200':
+          description: Extraction réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extraction_id:
+                    type: string
+                  source_type:
+                    type: string
+                    enum: [pdf, audio]
+                  text:
+                    type: string
+                  metadata:
+                    type: object
+                  processing_time_ms:
+                    type: integer
+        '400':
+          description: Fichier invalide ou trop volumineux
+        '500':
+          description: Erreur lors de l'extraction
+
+  /api/ingest/generate:
+    post:
+      tags: [Ingest]
+      summary: Générer du contenu IA depuis une extraction
+      description: Génère des quiz/flashcards/fiches à partir d'un texte extrait
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - extraction_id
+              properties:
+                extraction_id:
+                  type: string
+                type:
+                  type: string
+                  enum: [theme, quiz, flashcards, fiche]
+                  default: theme
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  default: intermediate
+      responses:
+        '200':
+          description: Génération réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  generation_id:
+                    type: string
+                  theme_id:
+                    type: string
+                  result:
+                    type: object
+                  validation:
+                    type: object
+                  processing_time_ms:
+                    type: integer
+
+  /api/ingest/extractions:
+    get:
+      tags: [Ingest]
+      summary: Liste des extractions
+      description: Récupère l'historique des extractions de contenu
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: source_type
+          in: query
+          schema:
+            type: string
+            enum: [pdf, audio]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, completed, failed]
+      responses:
+        '200':
+          description: Liste récupérée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extractions:
+                    type: array
+                    items:
+                      type: object
+                  pagination:
+                    type: object
+
+  # ============================================================
+  # INSIGHTS API - Analytics de classe
+  # ============================================================
+
+  /api/insights/class/{classId}:
+    get:
+      tags: [Insights]
+      summary: Insights pour une classe
+      description: Récupère tous les insights (difficultés, tendances, recommandations) pour une classe
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: classId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [difficulty, performance, engagement, progress, recommendation]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [info, warning, critical]
+        - name: unread
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Insights récupérés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  class:
+                    type: object
+                  insights:
+                    type: array
+                    items:
+                      type: object
+                  stats:
+                    type: object
+
+  /api/insights/difficulties:
+    get:
+      tags: [Insights]
+      summary: Top difficultés d'une classe
+      description: Identifie les thèmes où les élèves rencontrent le plus de difficultés
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: class_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Difficultés identifiées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  class:
+                    type: object
+                  difficulties:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        theme_id:
+                          type: string
+                        theme_title:
+                          type: string
+                        avg_success_rate:
+                          type: number
+                        struggling_student_count:
+                          type: integer
+                        struggling_students:
+                          type: array
+                          items:
+                            type: object
+
+  /api/insights/mark-read:
+    post:
+      tags: [Insights]
+      summary: Marquer un insight comme lu
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - insight_id
+              properties:
+                insight_id:
+                  type: string
+      responses:
+        '200':
+          description: Insight marqué comme lu
+
+  # ============================================================
+  # COACH API - Assistant pédagogique IA
+  # ============================================================
+
+  /api/coach/session/start:
+    post:
+      tags: [Coach]
+      summary: Démarrer une session de coaching
+      description: Initie une conversation avec l'assistant pédagogique IA
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - context_type
+              properties:
+                context_type:
+                  type: string
+                  enum: [class, student, assignment, general]
+                context_id:
+                  type: string
+                  description: ID de la classe/élève/assignment (requis sauf pour 'general')
+                goal:
+                  type: string
+                  description: Objectif de la session
+      responses:
+        '201':
+          description: Session créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  context_type:
+                    type: string
+                  context_id:
+                    type: string
+                  welcome_message:
+                    type: string
+
+  /api/coach/session/{sessionId}/message:
+    post:
+      tags: [Coach]
+      summary: Envoyer un message au coach
+      description: Envoie un message dans une session de coaching et reçoit une réponse IA
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Réponse du coach
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  metadata:
+                    type: object
+
+  /api/coach/session/{sessionId}:
+    get:
+      tags: [Coach]
+      summary: Récupérer une session de coaching
+      description: Récupère l'historique complet d'une session
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session récupérée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session:
+                    type: object
+                  messages:
+                    type: array
+                    items:
+                      type: object
+
+  /api/coach/sessions:
+    get:
+      tags: [Coach]
+      summary: Liste des sessions de coaching
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, completed, archived]
+      responses:
+        '200':
+          description: Sessions récupérées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      type: object
+                  pagination:
+                    type: object
+
+  /api/coach/suggestions:
+    post:
+      tags: [Coach]
+      summary: Obtenir des suggestions pédagogiques
+      description: Génère des suggestions contextuelles basées sur les données de la classe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - context_type
+              properties:
+                context_type:
+                  type: string
+                  enum: [class, student, assignment, general]
+                context_id:
+                  type: string
+      responses:
+        '200':
+          description: Suggestions générées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: object
+
+  # ============================================================
+  # PUBLISH API - Publication vers Ergo-Mate
+  # ============================================================
+
+  /api/publish/theme:
+    post:
+      tags: [Publish]
+      summary: Publier un thème vers Ergo-Mate
+      description: Publie un thème généré vers le catalogue ou comme affectation directe
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - theme_id
+                - publication_type
+              properties:
+                theme_id:
+                  type: string
+                generation_id:
+                  type: string
+                  description: ID de la génération IA source (optionnel)
+                publication_type:
+                  type: string
+                  enum: [catalog, assignment]
+                target_classes:
+                  type: array
+                  items:
+                    type: string
+                  description: Classes cibles (requis si publication_type=assignment)
+                target_students:
+                  type: array
+                  items:
+                    type: string
+                  description: Élèves cibles (optionnel)
+      responses:
+        '201':
+          description: Publication réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publication_id:
+                    type: string
+                  status:
+                    type: string
+                  ergomate_theme_id:
+                    type: string
+                  ergomate_assignment_id:
+                    type: string
+        '400':
+          description: Thème non conforme au schéma Ergo-Mate
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  validation_errors:
+                    type: array
+                    items:
+                      type: string
+
+  /api/publish/acknowledge:
+    post:
+      tags: [Publish]
+      summary: Webhook - Accusé de réception Ergo-Mate
+      description: Endpoint webhook pour recevoir les accusés de réception d'Ergo-Mate
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required:
+                - publication_id
+                - status
+              properties:
+                publication_id:
+                  type: string
+                status:
+                  type: string
+                  enum: [acknowledged, published, failed]
+                ergomate_theme_id:
+                  type: string
+                ergomate_assignment_id:
+                  type: string
+                data:
+                  type: object
+                  description: Données additionnelles
+      responses:
+        '200':
+          description: Accusé enregistré
+
+  /api/publish/publications:
+    get:
+      tags: [Publish]
+      summary: Liste des publications
+      description: Récupère l'historique des publications vers Ergo-Mate
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, published, acknowledged, failed]
+        - name: publication_type
+          in: query
+          schema:
+            type: string
+            enum: [catalog, assignment]
+      responses:
+        '200':
+          description: Publications récupérées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publications:
+                    type: array
+                    items:
+                      type: object
+                  pagination:
+                    type: object
+
+  /api/publish/publications/{publicationId}:
+    get:
+      tags: [Publish]
+      summary: Détails d'une publication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: publicationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Publication récupérée
+          content:
+            application/json:
+              schema:
+                type: object

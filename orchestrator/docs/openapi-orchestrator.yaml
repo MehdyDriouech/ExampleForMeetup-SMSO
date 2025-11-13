@@ -90,6 +90,16 @@ tags:
     description: 'Sprint 8: Social & Collaborative Learning - Classements, partages, commentaires, révision collective, modération'
   - name: Academic
     description: 'Sprint 9: Academic Data Hub - API lecture seule pour exports ENT/LMS avec rate limiting'
+  - name: AI-Copilot
+    description: 'Sprint 10: Teacher-AI Copilot - Génération quiz/fiches, insights classe, coach pédagogique, publication Ergo-Mate'
+  - name: Ingest
+    description: 'Sprint 10: Ingestion de contenu - Upload PDF/audio et extraction de texte'
+  - name: Insights
+    description: 'Sprint 10: Class Insights - Analytics et top difficultés par classe'
+  - name: Coach
+    description: 'Sprint 10: Coach Pédagogique - Assistant IA pour enseignants'
+  - name: Publish
+    description: 'Sprint 10: Publication Ergo-Mate - Publication de thèmes vers catalogue/affectations'
 
 paths:
   /api/health:
