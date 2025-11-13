@@ -197,16 +197,16 @@ curl http://localhost:8080/health.php
 
 ## 🤝 Support
 **Développeur** : Mehdy Driouech  
-**Email** : contact@mehdydriouech.fr  
-**Site** : [www.mehdydriouech.fr](https://www.mehdydriouech.fr)
+**Email** : contact@dawp-engineering.com  
+**Site** : [www.dawp-engineering.com/](https://dawp-engineering.com/)
 
 ---
 
 ## 📄 Licence
-Code propriétaire – Tous droits réservés.  
+Code Open-source Licence AGPL 3.0 – Tous droits réservés.  
 © 2025 Mehdy Driouech
 
 ---
 
-**Version MVP** : Sprint 0 + Sprint 1 complétés ✅  
-**Prochaine version** : Sprint 2 (Collaboration & IA)
+**Version MVP**  
+
