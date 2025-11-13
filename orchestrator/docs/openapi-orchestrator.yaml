@@ -102,6 +102,14 @@ tags:
     description: 'Sprint 10: Publication Ergo-Mate - Publication de thèmes vers catalogue/affectations'
   - name: Catalog
     description: 'Sprint 12: Pedagogical Library - Catalogue interne de thèmes validés et versionnés, accessible aux enseignants du même établissement'
+  - name: Quality
+    description: 'Sprint 13: AI Quality & Linting - Analyse de confiance IA et détection d''incohérences dans les contenus générés'
+  - name: System
+    description: 'Sprint 13: System Management - Diagnostic système, backups automatiques, et monitoring de santé'
+  - name: Export
+    description: 'Sprint 13: Interoperability - Export de thèmes vers formats LMS (QTI 2.2, JSON) pour Moodle, Canvas, Blackboard'
+  - name: User
+    description: 'Sprint 13: User Management - Gestion de profil utilisateur et onboarding'
 
 paths:
   /api/health:
@@ -2557,6 +2565,539 @@ paths:
         '501':
           description: Format non encore implémenté
 
+  # ========================================
+  # Sprint 13: Stability, Automation & UX
+  # ========================================
+
+  /api/user/profile:
+    get:
+      tags: [User]
+      summary: Récupérer le profil utilisateur
+      description: Retourne les informations complètes du profil utilisateur incluant les préférences et le statut onboarding
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Profil utilisateur récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    put:
+      tags: [User]
+      summary: Mettre à jour le profil utilisateur
+      description: Met à jour les informations modifiables du profil (nom complet, préférences)
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                  example: "Claire Dubois"
+                preferences:
+                  type: object
+                  properties:
+                    theme:
+                      type: string
+                      enum: [light, dark]
+                    notifications_enabled:
+                      type: boolean
+                    language:
+                      type: string
+                      example: "fr"
+      responses:
+        '200':
+          description: Profil mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/user/onboarding-complete:
+    post:
+      tags: [User]
+      summary: Marquer l'onboarding comme terminé
+      description: Indique que l'utilisateur a terminé le processus d'onboarding
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Onboarding marqué comme complété
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/quality/analyze:
+    post:
+      tags: [Quality]
+      summary: Analyser la qualité d'un thème (IA Confidence)
+      description: |
+        Évalue la fiabilité du contenu généré par IA et retourne un score de confiance par question.
+        Inclut détection des zones à risque et recommandations de validation.
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - theme_id
+              properties:
+                theme_id:
+                  type: integer
+                  example: 42
+      responses:
+        '200':
+          description: Analyse de qualité complétée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  report:
+                    $ref: '#/components/schemas/QualityConfidenceReport'
+                  badge:
+                    $ref: '#/components/schemas/QualityBadge'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/quality/lint:
+    post:
+      tags: [Quality]
+      summary: Vérifier le contenu d'un thème (Linting)
+      description: |
+        Détecte les incohérences, erreurs factuelles, et problèmes structurels dans un thème.
+        Retourne erreurs critiques, avertissements et recommandations.
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - theme_id
+              properties:
+                theme_id:
+                  type: integer
+                  example: 42
+      responses:
+        '200':
+          description: Linting complété
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  report:
+                    $ref: '#/components/schemas/LintingReport'
+                  summary:
+                    $ref: '#/components/schemas/LintingSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/system/diagnostic:
+    get:
+      tags: [System]
+      summary: Diagnostic système complet
+      description: |
+        Exécute une série de vérifications système :
+        - État base de données et latence
+        - Service IA (configuration et disponibilité)
+        - Espace disque et permissions filesystem
+        - Limites API et utilisation
+        - État des sauvegardes
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Diagnostic complété
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemDiagnostic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès réservé aux admins et direction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/system/backups:
+    get:
+      tags: [System]
+      summary: Lister les sauvegardes disponibles
+      description: Retourne la liste des sauvegardes avec taille, date, et âge
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Liste des sauvegardes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  backups:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BackupInfo'
+                  count:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/system/backup:
+    post:
+      tags: [System]
+      summary: Créer une sauvegarde manuelle
+      description: |
+        Déclenche une sauvegarde complète du système incluant :
+        - Base de données (toutes tables)
+        - Catalogue de thèmes
+        - Configurations (.env, config/)
+        - Génère un fichier ZIP téléchargeable
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: Forcer même si sauvegarde récente existe
+                  default: false
+      responses:
+        '200':
+          description: Sauvegarde créée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  backup_name:
+                    type: string
+                  backup_path:
+                    type: string
+                  size:
+                    type: integer
+                  size_human:
+                    type: string
+                  timestamp:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          description: Échec de la sauvegarde
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /api/system/backup/{backup_name}/download:
+    get:
+      tags: [System]
+      summary: Télécharger une sauvegarde
+      description: Télécharge un fichier ZIP de sauvegarde
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: backup_name
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "studymate_backup_2025-11-13_02-00-00.zip"
+      responses:
+        '200':
+          description: Fichier ZIP de sauvegarde
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/export/formats:
+    get:
+      tags: [Export]
+      summary: Lister les formats d'export disponibles
+      description: Retourne les formats supportés et les plateformes LMS compatibles
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      responses:
+        '200':
+          description: Liste des formats d'export
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  formats:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        file_extension:
+                          type: string
+                        mime_type:
+                          type: string
+                  lms_platforms:
+                    type: object
+                    additionalProperties:
+                      type: string
+              example:
+                success: true
+                formats:
+                  - id: qti
+                    name: "QTI 2.2"
+                    description: "Format standard pour LMS"
+                    file_extension: "zip"
+                    mime_type: "application/zip"
+                  - id: json
+                    name: "JSON"
+                    description: "Format natif StudyMate"
+                    file_extension: "json"
+                    mime_type: "application/json"
+                lms_platforms:
+                  generic: "QTI 2.2 Standard"
+                  moodle: "Moodle"
+                  canvas: "Canvas LMS"
+                  blackboard: "Blackboard Learn"
+
+  /api/export/qti/{theme_id}:
+    get:
+      tags: [Export]
+      summary: Exporter un thème au format QTI 2.2
+      description: |
+        Génère un package QTI 2.2 compatible avec :
+        - Moodle
+        - Canvas
+        - Blackboard
+        - Autres LMS conformes IMS QTI
+
+        Le package inclut :
+        - assessment.xml (questions en QTI)
+        - imsmanifest.xml (métadonnées)
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: theme_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+        - name: explanations
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Inclure les explications des réponses
+        - name: shuffle
+          in: query
+          schema:
+            type: boolean
+            default: true
+          description: Mélanger l'ordre des réponses
+        - name: lms
+          in: query
+          schema:
+            type: string
+            enum: [generic, moodle, canvas, blackboard]
+            default: generic
+          description: Optimiser pour une plateforme LMS spécifique
+      responses:
+        '200':
+          description: Package QTI 2.2 (ZIP)
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: "attachment; filename=theme_title_qti.zip"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès refusé (uniquement vos propres thèmes)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/export/json/{theme_id}:
+    get:
+      tags: [Export]
+      summary: Exporter un thème au format JSON
+      description: Export du thème dans le format natif StudyMate pour archivage ou transfert
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: theme_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 42
+      responses:
+        '200':
+          description: Thème au format JSON
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: "SPRINT_13"
+                  exported_at:
+                    type: string
+                    format: date-time
+                  theme:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      title:
+                        type: string
+                      description:
+                        type: string
+                      difficulty:
+                        type: string
+                      status:
+                        type: string
+                      created_at:
+                        type: string
+                      content:
+                        type: object
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: "attachment; filename=theme_title.json"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     urlEncodedAuth:
@@ -4235,3 +4776,257 @@ components:
           type: array
           items:
             type: object
+
+    # ========================================
+    # Sprint 13: Schemas
+    # ========================================
+
+    UserProfile:
+      type: object
+      description: 'Sprint 13: User profile with onboarding status'
+      properties:
+        id:
+          type: integer
+        tenant_id:
+          type: integer
+        email:
+          type: string
+        full_name:
+          type: string
+        role:
+          type: string
+          enum: [admin, direction, teacher, intervenant, inspector]
+        first_login:
+          type: boolean
+          description: True if user has never logged in before
+        onboarding_completed:
+          type: boolean
+          description: True if user completed onboarding walkthrough
+        preferences:
+          type: object
+          properties:
+            theme:
+              type: string
+              enum: [light, dark]
+            notifications_enabled:
+              type: boolean
+            language:
+              type: string
+        created_at:
+          type: string
+          format: date-time
+        last_login_at:
+          type: string
+          format: date-time
+
+    QualityConfidenceReport:
+      type: object
+      description: 'Sprint 13: AI confidence analysis report'
+      properties:
+        overall_confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Overall confidence score (0-1)
+        questions:
+          type: array
+          items:
+            type: object
+            properties:
+              question_id:
+                type: integer
+              confidence_score:
+                type: number
+                format: float
+              risk_level:
+                type: string
+                enum: [low, medium, high]
+              issues:
+                type: array
+                items:
+                  type: string
+              text_preview:
+                type: string
+        risk_areas:
+          type: array
+          items:
+            type: object
+            properties:
+              question_index:
+                type: integer
+              reason:
+                type: string
+              severity:
+                type: string
+        recommendations:
+          type: array
+          items:
+            type: object
+            properties:
+              priority:
+                type: string
+                enum: [low, medium, high]
+              message:
+                type: string
+              action:
+                type: string
+        requires_validation:
+          type: boolean
+          description: True if human validation is recommended
+
+    QualityBadge:
+      type: object
+      description: 'Sprint 13: Quality badge for theme'
+      properties:
+        label:
+          type: string
+          enum: [Excellente, Bonne, Acceptable, À revoir]
+        color:
+          type: string
+          description: Hex color code
+        icon:
+          type: string
+          description: Unicode emoji icon
+
+    LintingReport:
+      type: object
+      description: 'Sprint 13: Content linting report'
+      properties:
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/LintIssue'
+        warnings:
+          type: array
+          items:
+            $ref: '#/components/schemas/LintIssue'
+        info:
+          type: array
+          items:
+            $ref: '#/components/schemas/LintIssue'
+        stats:
+          type: object
+          properties:
+            total_questions:
+              type: integer
+            total_words:
+              type: integer
+            avg_question_length:
+              type: integer
+            avg_answer_length:
+              type: integer
+
+    LintIssue:
+      type: object
+      description: 'Sprint 13: Individual linting issue'
+      properties:
+        code:
+          type: string
+          example: "DUPLICATE_QUESTION"
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        location:
+          type: string
+          example: "Question 3"
+
+    LintingSummary:
+      type: object
+      description: 'Sprint 13: Linting summary'
+      properties:
+        status:
+          type: string
+          enum: [success, warning, error]
+        message:
+          type: string
+        color:
+          type: string
+
+    SystemDiagnostic:
+      type: object
+      description: 'Sprint 13: System health diagnostic'
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        checks:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/DiagnosticCheck'
+      example:
+        timestamp: "2025-11-13T10:00:00Z"
+        status: "healthy"
+        checks:
+          database:
+            status: "ok"
+            latency_ms: 12
+            message: "Database connection healthy"
+          ai_service:
+            status: "ok"
+            provider: "Mistral AI"
+            message: "AI service configured"
+          disk_space:
+            status: "ok"
+            used_percent: 45.2
+            free_gb: 150.5
+            total_gb: 250.0
+
+    DiagnosticCheck:
+      type: object
+      description: 'Sprint 13: Individual diagnostic check'
+      properties:
+        status:
+          type: string
+          enum: [ok, warning, error, critical, info]
+        message:
+          type: string
+        latency_ms:
+          type: number
+          format: float
+        provider:
+          type: string
+        table_count:
+          type: integer
+        used_percent:
+          type: number
+          format: float
+        free_gb:
+          type: number
+          format: float
+        total_gb:
+          type: number
+          format: float
+        version:
+          type: string
+        memory_limit:
+          type: string
+        backup_count:
+          type: integer
+
+    BackupInfo:
+      type: object
+      description: 'Sprint 13: Backup metadata'
+      properties:
+        name:
+          type: string
+          example: "studymate_backup_2025-11-13_02-00-00.zip"
+        path:
+          type: string
+        size:
+          type: integer
+          description: Size in bytes
+        size_human:
+          type: string
+          example: "45.2 MB"
+        created_at:
+          type: string
+          format: date-time
+        age_days:
+          type: integer
+          description: Age in days
