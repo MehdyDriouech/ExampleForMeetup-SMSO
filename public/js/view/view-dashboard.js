@@ -7,6 +7,7 @@
 /**
  * Initialize Dashboard View
  * Displays KPIs, charts, and ErgoMate sync status
+ * Sprint 6: Enhanced with Learning Analytics
  */
 async function initDashboardView() {
     const content = document.getElementById('dashboard-content');
@@ -22,6 +23,49 @@ async function initDashboardView() {
             <p class="role-badge">Rôle: ${getRoleDisplayName(currentUser.role)}</p>
             <p class="tenant-info">Établissement: ${currentUser.tenantName || currentUser.tenantId}</p>
         </div>
+
+        ${canViewAnalytics(currentUser.role) ? `
+        <div class="analytics-section" id="analytics-section">
+            <h3>📊 Learning Analytics</h3>
+
+            <!-- Analytics Filters -->
+            <div class="analytics-filters" id="analytics-filters">
+                <label>
+                    Classe:
+                    <select id="filter-class" onchange="applyAnalyticsFilters()">
+                        <option value="">Toutes les classes</option>
+                    </select>
+                </label>
+                <label>
+                    Thème:
+                    <select id="filter-theme" onchange="applyAnalyticsFilters()">
+                        <option value="">Tous les thèmes</option>
+                    </select>
+                </label>
+                <label>
+                    Période:
+                    <select id="filter-period" onchange="applyAnalyticsFilters()">
+                        <option value="7">7 derniers jours</option>
+                        <option value="30" selected>30 derniers jours</option>
+                        <option value="90">90 derniers jours</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Learning Analytics KPIs -->
+            <div class="analytics-kpis" id="analytics-kpis">
+                <p>Chargement des analytics...</p>
+            </div>
+
+            <!-- Heatmap Section -->
+            <div class="analytics-heatmap-section" id="analytics-heatmap-section">
+                <h4>🔥 Heatmap des difficultés par thème</h4>
+                <div id="analytics-heatmap">
+                    <p>Chargement de la heatmap...</p>
+                </div>
+            </div>
+        </div>
+        ` : ''}
 
         <div class="sync-status" id="ergomate-sync-status">
             <h3>📊 Statut ErgoMate</h3>
@@ -42,12 +86,25 @@ async function initDashboardView() {
         </div>
     `;
 
+    // Load filter options first (if analytics are available)
+    if (canViewAnalytics(currentUser.role)) {
+        await loadAnalyticsFilterOptions();
+    }
+
     // Load dashboard data
-    await Promise.all([
+    const promises = [
         loadDashboardKPIs(),
         loadErgoMateSyncStatus(),
         loadRecentActivity()
-    ]);
+    ];
+
+    // Add analytics loading if user can view them
+    if (canViewAnalytics(currentUser.role)) {
+        promises.push(loadAnalyticsKPIs());
+        promises.push(loadAnalyticsHeatmap());
+    }
+
+    await Promise.all(promises);
 
     // Load charts if Chart.js is available
     if (typeof Chart !== 'undefined') {
@@ -451,4 +508,288 @@ function renderMasteryDistributionChart(data) {
             }
         }
     });
+}
+
+// ============================================================
+// SPRINT 6: LEARNING ANALYTICS
+// ============================================================
+
+/**
+ * Global filters state for analytics
+ */
+let analyticsFilters = {
+    classId: '',
+    themeId: '',
+    period: 30  // days
+};
+
+/**
+ * Check if user can view analytics
+ */
+function canViewAnalytics(role) {
+    return ['admin', 'direction', 'teacher', 'inspector'].includes(role);
+}
+
+/**
+ * Load filter options (classes and themes)
+ */
+async function loadAnalyticsFilterOptions() {
+    try {
+        // Load classes
+        const classesData = await apiCall('/api/classes');
+        const classSelect = document.getElementById('filter-class');
+
+        if (classesData.data && classesData.data.length > 0) {
+            classesData.data.forEach(cls => {
+                const option = document.createElement('option');
+                option.value = cls.id;
+                option.textContent = cls.name;
+                classSelect.appendChild(option);
+            });
+        }
+
+        // Load themes
+        const themesData = await apiCall('/api/themes');
+        const themeSelect = document.getElementById('filter-theme');
+
+        if (themesData.data && themesData.data.length > 0) {
+            themesData.data.forEach(theme => {
+                const option = document.createElement('option');
+                option.value = theme.id;
+                option.textContent = theme.title;
+                themeSelect.appendChild(option);
+            });
+        }
+
+        // Restore saved filters from localStorage
+        const saved = localStorage.getItem('analyticsFilters');
+        if (saved) {
+            analyticsFilters = JSON.parse(saved);
+            document.getElementById('filter-class').value = analyticsFilters.classId;
+            document.getElementById('filter-theme').value = analyticsFilters.themeId;
+            document.getElementById('filter-period').value = analyticsFilters.period;
+        }
+
+    } catch (error) {
+        console.error('Error loading filter options:', error);
+    }
+}
+
+/**
+ * Apply analytics filters and reload data
+ */
+async function applyAnalyticsFilters() {
+    // Update filters state
+    analyticsFilters.classId = document.getElementById('filter-class').value;
+    analyticsFilters.themeId = document.getElementById('filter-theme').value;
+    analyticsFilters.period = parseInt(document.getElementById('filter-period').value);
+
+    // Save to localStorage for persistence
+    localStorage.setItem('analyticsFilters', JSON.stringify(analyticsFilters));
+
+    // Reload analytics data
+    await Promise.all([
+        loadAnalyticsKPIs(),
+        loadAnalyticsHeatmap()
+    ]);
+}
+
+/**
+ * Load Learning Analytics KPIs
+ */
+async function loadAnalyticsKPIs() {
+    const kpisContainer = document.getElementById('analytics-kpis');
+
+    try {
+        // Build query params
+        const params = new URLSearchParams();
+        if (analyticsFilters.classId) params.append('class_id', analyticsFilters.classId);
+        if (analyticsFilters.themeId) params.append('theme_id', analyticsFilters.themeId);
+
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - analyticsFilters.period * 24 * 60 * 60 * 1000)
+            .toISOString().split('T')[0];
+        params.append('start_date', startDate);
+        params.append('end_date', endDate);
+
+        const data = await apiCall(`/api/analytics/kpis?${params.toString()}`);
+        const kpis = data.kpis;
+
+        // Build KPI cards
+        const kpiCards = `
+            <div class="kpi-grid analytics-kpi-grid">
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">👥</div>
+                    <div class="kpi-content">
+                        <h4>Élèves Total</h4>
+                        <p class="kpi-value">${kpis.students.total}</p>
+                        <p class="kpi-subtitle">${kpis.students.active} actifs (${kpis.students.active_rate}%)</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">📊</div>
+                    <div class="kpi-content">
+                        <h4>Score Moyen</h4>
+                        <p class="kpi-value">${kpis.performance.avg_score}%</p>
+                        <p class="kpi-subtitle">Taux de réussite: ${kpis.performance.success_rate}%</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-content">
+                        <h4>Maîtrise Moyenne</h4>
+                        <p class="kpi-value">${kpis.performance.avg_mastery}%</p>
+                        <p class="kpi-subtitle">niveau de compétence</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">📝</div>
+                    <div class="kpi-content">
+                        <h4>Sessions</h4>
+                        <p class="kpi-value">${kpis.sessions.total}</p>
+                        <p class="kpi-subtitle">${kpis.sessions.completed} terminées (${kpis.sessions.completion_rate}%)</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">⏱️</div>
+                    <div class="kpi-content">
+                        <h4>Temps Total</h4>
+                        <p class="kpi-value">${kpis.sessions.total_time_hours}h</p>
+                        <p class="kpi-subtitle">score moyen: ${kpis.sessions.avg_score}%</p>
+                    </div>
+                </div>
+
+                <div class="kpi-card analytics-kpi">
+                    <div class="kpi-icon">📋</div>
+                    <div class="kpi-content">
+                        <h4>Affectations</h4>
+                        <p class="kpi-value">${kpis.assignments.total}</p>
+                        <p class="kpi-subtitle">${kpis.assignments.active} actives, ${kpis.assignments.pending} en attente</p>
+                    </div>
+                </div>
+            </div>
+            ${data.cached ? '<p class="cache-indicator">⚡ Données en cache (rafraîchies toutes les 5 min)</p>' : ''}
+        `;
+
+        kpisContainer.innerHTML = kpiCards;
+
+    } catch (error) {
+        kpisContainer.innerHTML = `
+            <div class="error-message">
+                <p>❌ Erreur lors du chargement des analytics KPIs</p>
+                <p class="error-details">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Load Analytics Heatmap
+ */
+async function loadAnalyticsHeatmap() {
+    const heatmapContainer = document.getElementById('analytics-heatmap');
+
+    try {
+        // Build query params
+        const params = new URLSearchParams();
+        if (analyticsFilters.classId) params.append('class_id', analyticsFilters.classId);
+
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date(Date.now() - analyticsFilters.period * 24 * 60 * 60 * 1000)
+            .toISOString().split('T')[0];
+        params.append('start_date', startDate);
+        params.append('end_date', endDate);
+
+        const data = await apiCall(`/api/analytics/heatmap?${params.toString()}`);
+        const heatmap = data.heatmap;
+
+        if (!heatmap || heatmap.length === 0) {
+            heatmapContainer.innerHTML = '<p class="empty-message">Aucune donnée disponible pour la heatmap</p>';
+            return;
+        }
+
+        // Render heatmap using grid layout
+        let heatmapHTML = '<div class="heatmap-grid">';
+
+        heatmap.forEach(item => {
+            const tooltipContent = `
+                Thème: ${item.theme_title}
+                Difficulté: ${item.theme_difficulty}
+                Élèves: ${item.metrics.student_count}
+                Tentatives: ${item.metrics.total_attempts}
+                Taux d'échec: ${item.metrics.failure_rate}%
+                Score moyen: ${item.metrics.avg_score}%
+                Maîtrise: ${item.metrics.avg_mastery}%
+            `.trim();
+
+            heatmapHTML += `
+                <div class="heatmap-cell"
+                     style="background-color: ${item.color};"
+                     data-difficulty="${item.difficulty_level}"
+                     title="${tooltipContent}">
+                    <div class="heatmap-cell-content">
+                        <h5>${item.theme_title}</h5>
+                        <p class="failure-rate">${item.metrics.failure_rate}% échec</p>
+                        <p class="avg-score">Score: ${item.metrics.avg_score}%</p>
+                        ${item.needs_remediation ? '<span class="remediation-badge">⚠️ Remédiation nécessaire</span>' : ''}
+                    </div>
+                    ${item.needs_remediation ? `
+                        <button class="btn-remediation-cta" onclick="createRemediationSession('${item.theme_id}')">
+                            📝 Planifier révision
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+        });
+
+        heatmapHTML += '</div>';
+
+        // Add legend
+        heatmapHTML += `
+            <div class="heatmap-legend">
+                <h5>Légende:</h5>
+                <div class="legend-items">
+                    <span class="legend-item"><span class="color-box" style="background: #28a745;"></span> Faible (&lt; 30% échec)</span>
+                    <span class="legend-item"><span class="color-box" style="background: #ffc107;"></span> Moyen (30-50% échec)</span>
+                    <span class="legend-item"><span class="color-box" style="background: #fd7e14;"></span> Élevé (50-70% échec)</span>
+                    <span class="legend-item"><span class="color-box" style="background: #dc3545;"></span> Critique (&gt; 70% échec)</span>
+                </div>
+            </div>
+        `;
+
+        heatmapContainer.innerHTML = heatmapHTML;
+
+    } catch (error) {
+        heatmapContainer.innerHTML = `
+            <div class="error-message">
+                <p>❌ Erreur lors du chargement de la heatmap</p>
+                <p class="error-details">${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Create remediation session for a theme (CTA from heatmap)
+ */
+async function createRemediationSession(themeId) {
+    if (!confirm('Créer une session de remédiation pour ce thème ?')) {
+        return;
+    }
+
+    try {
+        // Navigate to assignments creation with pre-filled theme
+        // This would typically open a modal or navigate to assignment creation page
+        alert(`Fonctionnalité à venir: Créer une révision pour le thème ${themeId}`);
+
+        // TODO: Implement assignment creation flow
+        // For now, just show a placeholder
+
+    } catch (error) {
+        alert('Erreur lors de la création de la révision: ' + error.message);
+    }
 }

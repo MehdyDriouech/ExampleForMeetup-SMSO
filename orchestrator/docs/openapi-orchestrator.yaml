@@ -80,6 +80,8 @@ tags:
     description: Gestion des clés API et usage partenaires
   - name: Telemetry
     description: Télémétrie et observabilité API
+  - name: Analytics
+    description: 'Sprint 6: Learning Analytics - KPIs et heatmap pour enseignants'
   - name: Student
     description: 'Sprint 5: Learning Cycle - Endpoints côté élève (missions, progression, badges, révisions)'
 
@@ -721,6 +723,273 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TelemetryStats'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ============================================================
+  # Sprint 6: Learning Analytics - Measure & Analyze
+  # ============================================================
+
+  /api/analytics/kpis:
+    get:
+      tags: [Analytics]
+      summary: 'E6-DASH: KPIs consolidés pour enseignants'
+      description: |
+        Retourne les indicateurs clés de performance agrégés:
+        - Élèves total et actifs
+        - Score moyen et taux de réussite
+        - Maîtrise moyenne
+        - Sessions totales et complétées
+        - Temps total passé
+        - Affectations actives et en attente
+
+        **Cache**: 5 minutes (TTL 300s) pour optimisation performances (<1s sur 10k lignes).
+        **Filtres**: classe, thème, période (avec persistance localStorage côté client).
+
+        Nécessite le rôle teacher, direction, inspector ou admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par classe spécifique
+        - name: theme_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par thème spécifique
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (YYYY-MM-DD), défaut -30 jours
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (YYYY-MM-DD), défaut aujourd'hui
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: KPIs agrégés
+          headers:
+            X-Request-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id:
+                    type: string
+                  filters:
+                    type: object
+                    properties:
+                      class_id:
+                        type: string
+                        nullable: true
+                      theme_id:
+                        type: string
+                        nullable: true
+                      start_date:
+                        type: string
+                        format: date
+                      end_date:
+                        type: string
+                        format: date
+                  kpis:
+                    type: object
+                    properties:
+                      students:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                          active:
+                            type: integer
+                          active_rate:
+                            type: number
+                      performance:
+                        type: object
+                        properties:
+                          avg_score:
+                            type: number
+                          success_rate:
+                            type: number
+                          avg_mastery:
+                            type: number
+                      sessions:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                          completed:
+                            type: integer
+                          completion_rate:
+                            type: number
+                          avg_score:
+                            type: number
+                          total_time_hours:
+                            type: number
+                      assignments:
+                        type: object
+                        properties:
+                          total:
+                            type: integer
+                          active:
+                            type: integer
+                          pending:
+                            type: integer
+                          avg_received:
+                            type: number
+                          avg_completed:
+                            type: number
+                  cached:
+                    type: boolean
+                    description: Indique si les données proviennent du cache
+                  generated_at:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/analytics/heatmap:
+    get:
+      tags: [Analytics]
+      summary: 'E6-HEAT: Heatmap des difficultés par compétence/thème'
+      description: |
+        Retourne une visualisation des difficultés par thème pour cibler la remédiation.
+
+        **Métriques par thème**:
+        - Taux d'échec et de réussite
+        - Score moyen et maîtrise
+        - Nombre d'élèves et tentatives
+        - Niveau de difficulté: low, medium, high, critical
+        - Erreurs fréquentes
+
+        **CTA**: Lien pour créer une révision sur les thèmes difficiles (échec ≥50%).
+        **Cache**: 5 minutes (TTL 300s).
+
+        Nécessite le rôle teacher, direction, inspector ou admin.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par classe spécifique
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (YYYY-MM-DD), défaut -30 jours
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (YYYY-MM-DD), défaut aujourd'hui
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Heatmap des difficultés
+          headers:
+            X-Request-ID:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id:
+                    type: string
+                  filters:
+                    type: object
+                    properties:
+                      class_id:
+                        type: string
+                        nullable: true
+                      start_date:
+                        type: string
+                        format: date
+                      end_date:
+                        type: string
+                        format: date
+                  heatmap:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        theme_id:
+                          type: string
+                        theme_title:
+                          type: string
+                        theme_difficulty:
+                          type: string
+                          enum: [beginner, intermediate, advanced]
+                        metrics:
+                          type: object
+                          properties:
+                            student_count:
+                              type: integer
+                            total_attempts:
+                              type: integer
+                            avg_score:
+                              type: number
+                            avg_mastery:
+                              type: number
+                            failure_rate:
+                              type: number
+                            success_rate:
+                              type: number
+                            min_score:
+                              type: number
+                            max_score:
+                              type: number
+                            score_stddev:
+                              type: number
+                        difficulty_level:
+                          type: string
+                          enum: [low, medium, high, critical]
+                          description: Niveau calculé basé sur le taux d'échec
+                        needs_remediation:
+                          type: boolean
+                          description: True si taux d'échec ≥50%
+                        color:
+                          type: string
+                          description: Code couleur hex pour visualisation
+                        common_errors:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              errors:
+                                type: array
+                              count:
+                                type: integer
+                  cached:
+                    type: boolean
+                  generated_at:
+                    type: string
+                    format: date-time
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
