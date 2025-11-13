@@ -88,6 +88,8 @@ tags:
     description: 'Sprint 7: Adaptive Learning - Recommandations IA, difficulté adaptative, mode focus, validation enseignant, détection fatigue'
   - name: Social
     description: 'Sprint 8: Social & Collaborative Learning - Classements, partages, commentaires, révision collective, modération'
+  - name: Academic
+    description: 'Sprint 9: Academic Data Hub - API lecture seule pour exports ENT/LMS avec rate limiting'
 
 paths:
   /api/health:
@@ -2195,6 +2197,354 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  # ============================================================
+  # Sprint 9: Academic Data Hub - API Académique
+  # ============================================================
+
+  /api/academic/students:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export students data'
+      description: |
+        Read-only endpoint pour exporter les données étudiants vers ENT/LMS.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+        **Tenant isolation**: Accès strictement limité au tenant de la clé API.
+        **Observabilité**: Tous les appels sont journalisés dans sync_logs.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Clé API partenaire
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par classe
+        - name: promo_id
+          in: query
+          schema:
+            type: string
+          description: Filtrer par promotion
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Liste des étudiants
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStudentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/classes:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export classes data'
+      description: |
+        Read-only endpoint pour exporter les données classes vers ENT/LMS.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: promo_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived]
+            default: active
+      responses:
+        '200':
+          description: Liste des classes
+          headers:
+            X-RateLimit-Limit:
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicClassesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/promotions:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export promotions data'
+      description: |
+        Read-only endpoint pour exporter les données promotions vers ENT/LMS.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived]
+            default: active
+      responses:
+        '200':
+          description: Liste des promotions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicPromotionsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/themes:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export themes data'
+      description: |
+        Read-only endpoint pour exporter les thèmes pédagogiques vers ENT/LMS.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, active, archived]
+            default: active
+        - name: difficulty
+          in: query
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Liste des thèmes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicThemesResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/assignments:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export assignments data (read-only)'
+      description: |
+        Read-only endpoint pour exporter les affectations vers ENT/LMS.
+
+        **Read-only**: Cet endpoint ne permet que la consultation, pas la création/modification.
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+        - name: teacher_id
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, queued, pushed, ack, error]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Liste des affectations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicAssignmentsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/stats:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Export aggregated statistics'
+      description: |
+        Read-only endpoint pour exporter les statistiques agrégées vers ENT/LMS.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas.
+        **Scope requis**: `academic:read`
+        **Agrégation**: Calcule automatiquement avg_score, avg_mastery, total_time.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: class_id
+          in: query
+          schema:
+            type: string
+        - name: student_id
+          in: query
+          schema:
+            type: string
+        - name: theme_id
+          in: query
+          schema:
+            type: string
+        - name: start_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de début (défaut -30 jours)
+        - name: end_date
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Date de fin (défaut aujourd'hui)
+      responses:
+        '200':
+          description: Statistiques agrégées
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicStatsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /api/academic/export:
+    get:
+      tags: [Academic]
+      summary: 'E9-API: Full data export for ENT/LMS'
+      description: |
+        Export complet de toutes les données académiques en une seule requête.
+
+        **Rate Limiting**: Requiert une clé API valide avec quotas élevés.
+        **Scope requis**: `academic:export` (scope spécial avec permissions étendues)
+        **Format**: JSON (CSV à venir)
+        **Inclusions**: Sélectionner les ressources à inclure via le paramètre `include`.
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv]
+            default: json
+          description: Format d'export
+        - name: include
+          in: query
+          schema:
+            type: string
+          description: Ressources à inclure (CSV), ex "students,classes,themes,stats"
+          example: "students,classes,themes,stats"
+      responses:
+        '200':
+          description: Export complet
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcademicExportResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '501':
+          description: Format non encore implémenté
+
 components:
   securitySchemes:
     urlEncodedAuth:
@@ -3498,3 +3848,378 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    # ============================================================
+    # Sprint 9: Academic API Schemas
+    # ============================================================
+
+    AcademicStudentsResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/students'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              uuid_scolaire:
+                type: string
+              email_scolaire:
+                type: string
+                format: email
+              firstname:
+                type: string
+              lastname:
+                type: string
+              class_id:
+                type: string
+              promo_id:
+                type: string
+              class_name:
+                type: string
+              promo_name:
+                type: string
+              consent_sharing:
+                type: boolean
+              status:
+                type: string
+                enum: [active, graduated, withdrawn]
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+            limit:
+              type: integer
+            offset:
+              type: integer
+            has_more:
+              type: boolean
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicClassesResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/classes'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              promo_id:
+                type: string
+              promo_name:
+                type: string
+              teacher_id:
+                type: string
+              teacher_firstname:
+                type: string
+              teacher_lastname:
+                type: string
+              student_count:
+                type: integer
+              status:
+                type: string
+                enum: [active, archived]
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            count:
+              type: integer
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicPromotionsResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/promotions'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              description:
+                type: string
+              year_start:
+                type: integer
+              year_end:
+                type: integer
+              class_count:
+                type: integer
+              student_count:
+                type: integer
+              status:
+                type: string
+                enum: [active, archived]
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            count:
+              type: integer
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicThemesResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/themes'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              title:
+                type: string
+              description:
+                type: string
+              tags:
+                type: array
+                items:
+                  type: string
+              difficulty:
+                type: string
+                enum: [beginner, intermediate, advanced]
+              source:
+                type: string
+                enum: [manual, pdf_mistral, import]
+              status:
+                type: string
+                enum: [draft, active, archived]
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+            limit:
+              type: integer
+            offset:
+              type: integer
+            has_more:
+              type: boolean
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicAssignmentsResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/assignments'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                type: string
+                enum: [quiz, flashcards, fiche, annales]
+              title:
+                type: string
+              mode:
+                type: string
+                enum: [post-cours, pre-examen, revision-generale]
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              theme_difficulty:
+                type: string
+              teacher_id:
+                type: string
+              teacher_firstname:
+                type: string
+              teacher_lastname:
+                type: string
+              status:
+                type: string
+                enum: [draft, queued, pushed, ack, error]
+              due_at:
+                type: string
+                format: date-time
+              instructions:
+                type: string
+              targets:
+                type: string
+              created_at:
+                type: string
+                format: date-time
+              updated_at:
+                type: string
+                format: date-time
+        pagination:
+          type: object
+          properties:
+            total:
+              type: integer
+            limit:
+              type: integer
+            offset:
+              type: integer
+            has_more:
+              type: boolean
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicStatsResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/stats'
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              student_id:
+                type: string
+              firstname:
+                type: string
+              lastname:
+                type: string
+              email_scolaire:
+                type: string
+              theme_id:
+                type: string
+              theme_title:
+                type: string
+              theme_difficulty:
+                type: string
+              attempts:
+                type: integer
+              score:
+                type: number
+              mastery:
+                type: number
+              time_spent:
+                type: integer
+                description: Temps en secondes
+              last_activity_at:
+                type: string
+                format: date-time
+        aggregates:
+          type: object
+          properties:
+            total_sessions:
+              type: integer
+            avg_score:
+              type: number
+            avg_mastery:
+              type: number
+            total_time_hours:
+              type: number
+        filters:
+          type: object
+          properties:
+            class_id:
+              type: string
+              nullable: true
+            student_id:
+              type: string
+              nullable: true
+            theme_id:
+              type: string
+              nullable: true
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+        meta:
+          type: object
+          properties:
+            tenant_id:
+              type: string
+            generated_at:
+              type: string
+              format: date-time
+
+    AcademicExportResponse:
+      type: object
+      description: 'E9-API: Response for /api/academic/export'
+      properties:
+        tenant_id:
+          type: string
+        exported_at:
+          type: string
+          format: date-time
+        format_version:
+          type: string
+        students:
+          type: array
+          items:
+            type: object
+        classes:
+          type: array
+          items:
+            type: object
+        themes:
+          type: array
+          items:
+            type: object
+        stats:
+          type: array
+          items:
+            type: object
