@@ -117,6 +117,17 @@ const RBAC_PERMISSIONS = [
         'push_assignments' => ['admin', 'teacher', 'direction'],
         'view_logs' => ['admin', 'direction', 'inspector'],
     ],
+
+    // Analytics (Sprint 6)
+    'analytics' => [
+        'read' => ['admin', 'teacher', 'direction', 'inspector'],  // View analytics
+        'export' => ['admin', 'direction', 'inspector'],  // Export reports
+    ],
+
+    // Telemetry (API observability)
+    'telemetry' => [
+        'read' => ['admin', 'direction'],  // View API telemetry
+    ],
 ];
 
 /**
