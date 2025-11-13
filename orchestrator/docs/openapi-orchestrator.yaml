@@ -84,6 +84,8 @@ tags:
     description: 'Sprint 6: Learning Analytics - KPIs et heatmap pour enseignants'
   - name: Student
     description: 'Sprint 5: Learning Cycle - Endpoints côté élève (missions, progression, badges, révisions)'
+  - name: Adaptive
+    description: 'Sprint 7: Adaptive Learning - Recommandations IA, difficulté adaptative, mode focus, validation enseignant, détection fatigue'
 
 paths:
   /api/health:
@@ -1270,6 +1272,359 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StudentBadges'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # Sprint 7: Adaptive Learning - Personnalisation
+  # ============================================================
+
+  /api/reco:
+    get:
+      tags: [Adaptive]
+      summary: 'E7-RECO: Get AI-powered recommendations'
+      description: |
+        Génère 3 recommandations personnalisées pour un élève basées sur:
+        - Historique de performances
+        - Zone Proximale de Développement (ZPD)
+        - Patterns d'apprentissage
+        - Courbe de l'oubli
+
+        Inclut l'explicabilité (pourquoi cette recommandation).
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: ID de l'élève
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Recommandations personnalisées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id:
+                    type: string
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        theme_id:
+                          type: string
+                        theme_title:
+                          type: string
+                        theme_description:
+                          type: string
+                        theme_difficulty:
+                          type: string
+                        recommendation_score:
+                          type: number
+                        reasons:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              type:
+                                type: string
+                              label:
+                                type: string
+                              description:
+                                type: string
+                        explainability:
+                          type: string
+                  profile_summary:
+                    type: object
+                  generated_at:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/reco/feedback:
+    post:
+      tags: [Adaptive]
+      summary: 'E7-RECO: Record recommendation feedback'
+      description: |
+        Enregistre le feedback de l'élève sur une recommandation.
+        Permet d'améliorer le système de recommandation.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId, themeId, feedback]
+              properties:
+                studentId:
+                  type: string
+                themeId:
+                  type: string
+                feedback:
+                  type: string
+                  enum: [relevant, not_relevant, completed, too_hard, too_easy]
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Feedback enregistré
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/adaptive/difficulty:
+    get:
+      tags: [Adaptive]
+      summary: 'E7-DIFF: Get adaptive difficulty level'
+      description: |
+        Calcule le niveau de difficulté adaptatif recommandé pour un élève.
+        Niveaux: easy, normal, expert.
+        Basé sur les performances et la ZPD.
+      parameters:
+        - name: studentId
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: themeId
+          in: query
+          schema:
+            type: string
+          description: Filtrer par thème spécifique
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Niveau de difficulté recommandé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id:
+                    type: string
+                  current_level:
+                    type: string
+                    enum: [easy, normal, expert]
+                  level_info:
+                    type: object
+                  recommendation:
+                    type: string
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/focus/create:
+    post:
+      tags: [Adaptive]
+      summary: 'E7-FOCUS: Create focus session'
+      description: |
+        Crée une mini-session Focus ciblée (5-10 minutes).
+        Types: quick_review, error_focus, mastery_boost, daily_challenge.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId, focusMode]
+              properties:
+                studentId:
+                  type: string
+                focusMode:
+                  type: string
+                  enum: [quick_review, error_focus, mastery_boost, daily_challenge]
+                themeId:
+                  type: string
+                  description: Optionnel pour mastery_boost
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '201':
+          description: Session Focus créée
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id:
+                    type: string
+                  mode:
+                    type: object
+                  questions:
+                    type: array
+                  timeLimit:
+                    type: integer
+                  config:
+                    type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/teacher/validations:
+    get:
+      tags: [Adaptive]
+      summary: 'E7-HIL: Get pending validations'
+      description: |
+        Liste les items en attente de validation enseignant.
+        Human-in-the-loop pour recommandations IA, ajustements de difficulté, etc.
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [recommendation, difficulty_adjustment, focus_session, ai_content]
+        - name: my_items_only
+          in: query
+          schema:
+            type: boolean
+          description: Filtrer seulement mes items
+        - $ref: '#/components/parameters/TenantHeader'
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Liste des validations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags: [Adaptive]
+      summary: 'E7-HIL: Submit item for validation'
+      description: |
+        Soumet un item pour validation enseignant.
+      parameters:
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, data]
+              properties:
+                type:
+                  type: string
+                  enum: [recommendation, difficulty_adjustment, focus_session, ai_content]
+                data:
+                  type: object
+                metadata:
+                  type: object
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '201':
+          description: Item soumis
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/teacher/validations/{id}/approve:
+    post:
+      tags: [Adaptive]
+      summary: 'E7-HIL: Approve validation'
+      description: |
+        Approuve un item en attente de validation.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                modifications:
+                  type: object
+                  description: Modifications optionnelles
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Item approuvé
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/teacher/validations/{id}/reject:
+    post:
+      tags: [Adaptive]
+      summary: 'E7-HIL: Reject validation'
+      description: |
+        Rejette un item en attente de validation.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TenantHeader'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      security:
+        - bearerAuth: []
+        - urlEncodedAuth: []
+      responses:
+        '200':
+          description: Item rejeté
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':

@@ -8,6 +8,7 @@
  * Initialize Dashboard View
  * Displays KPIs, charts, and ErgoMate sync status
  * Sprint 6: Enhanced with Learning Analytics
+ * Sprint 7: Added AI Recommendations for students
  */
 async function initDashboardView() {
     const content = document.getElementById('dashboard-content');
@@ -23,6 +24,13 @@ async function initDashboardView() {
             <p class="role-badge">Rôle: ${getRoleDisplayName(currentUser.role)}</p>
             <p class="tenant-info">Établissement: ${currentUser.tenantName || currentUser.tenantId}</p>
         </div>
+
+        ${currentUser.role === 'student' ? `
+        <!-- Sprint 7: Recommendations Widget for Students -->
+        <div class="recommendations-section" id="recommendations-widget">
+            <p>⏳ Chargement de tes recommandations personnalisées...</p>
+        </div>
+        ` : ''}
 
         ${canViewAnalytics(currentUser.role) ? `
         <div class="analytics-section" id="analytics-section">
@@ -102,6 +110,11 @@ async function initDashboardView() {
     if (canViewAnalytics(currentUser.role)) {
         promises.push(loadAnalyticsKPIs());
         promises.push(loadAnalyticsHeatmap());
+    }
+
+    // Sprint 7: Load recommendations for students
+    if (currentUser.role === 'student') {
+        promises.push(loadStudentRecommendations(currentUser.id));
     }
 
     await Promise.all(promises);
