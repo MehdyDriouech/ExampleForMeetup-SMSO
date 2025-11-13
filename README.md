@@ -64,7 +64,7 @@
 │   └── ui/                     # Modules front riches (éditeur, catalogue, diagnostic)
 ├── public/                     # SPA enseignante + assets
 ├── docs/                       # Notes de sprint, architecture, schémas JSON
-├── ergomate/                   # Outils d'import ErgoMate et mocks
+├── ergomate-import/                   # Outils d'import ErgoMate et mocks
 ├── migrations/                 # SQL complémentaire (Sprint 11)
 └── INSTALLATION.md             # Procédure pas-à-pas (FTP + shared hosting)
 ```
