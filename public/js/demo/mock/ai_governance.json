@@ -1,0 +1,125 @@
+{
+  "success": true,
+  "data": {
+    "budget": {
+      "monthly": 500,
+      "used": 145.50,
+      "remaining": 354.50,
+      "percentage": 29.1,
+      "projectedEndOfMonth": 420,
+      "status": "healthy"
+    },
+    "usage": {
+      "totalRequests": 287,
+      "byCategory": {
+        "content_generation": 112,
+        "content_improvement": 78,
+        "quality_review": 45,
+        "personalization": 32,
+        "analytics": 20
+      },
+      "byModel": {
+        "gpt-4": 45,
+        "gpt-3.5-turbo": 242
+      },
+      "avgCostPerRequest": 0.51,
+      "avgTokensPerRequest": 1250
+    },
+    "audit": {
+      "totalLogs": 287,
+      "recentLogs": [
+        {
+          "id": "log-001",
+          "timestamp": "2025-11-14T10:30:00Z",
+          "userId": "teacher-001",
+          "userName": "Claire Dubois",
+          "operation": "content_generation",
+          "model": "gpt-4",
+          "prompt": "Générer 10 questions de CM1 sur les fractions",
+          "tokensUsed": 1850,
+          "cost": 0.074,
+          "duration": 3.2,
+          "status": "success",
+          "gdprCompliant": true
+        },
+        {
+          "id": "log-002",
+          "timestamp": "2025-11-14T09:45:00Z",
+          "userId": "teacher-002",
+          "userName": "Marc Lefevre",
+          "operation": "quality_review",
+          "model": "gpt-3.5-turbo",
+          "prompt": "Analyser la qualité du thème 'Géométrie plane'",
+          "tokensUsed": 950,
+          "cost": 0.019,
+          "duration": 2.1,
+          "status": "success",
+          "gdprCompliant": true
+        },
+        {
+          "id": "log-003",
+          "timestamp": "2025-11-14T08:20:00Z",
+          "userId": "teacher-001",
+          "userName": "Claire Dubois",
+          "operation": "content_improvement",
+          "model": "gpt-3.5-turbo",
+          "prompt": "Améliorer les feedbacks pour thème conjugaison",
+          "tokensUsed": 1200,
+          "cost": 0.024,
+          "duration": 2.5,
+          "status": "success",
+          "gdprCompliant": true
+        }
+      ]
+    },
+    "policy": {
+      "gdprMode": true,
+      "dataRetention": 90,
+      "anonymization": true,
+      "allowedModels": ["gpt-4", "gpt-3.5-turbo"],
+      "restrictedOperations": ["student_profiling"],
+      "requiresConsent": true,
+      "auditEnabled": true
+    },
+    "compliance": {
+      "gdprCompliance": 100,
+      "dataMinimization": 98,
+      "consentRate": 100,
+      "anonymizationRate": 100,
+      "issues": []
+    },
+    "insights": {
+      "topUsers": [
+        {
+          "userId": "teacher-001",
+          "userName": "Claire Dubois",
+          "requestCount": 125,
+          "totalCost": 62.50,
+          "avgQuality": 8.7
+        },
+        {
+          "userId": "teacher-002",
+          "userName": "Marc Lefevre",
+          "requestCount": 89,
+          "totalCost": 45.30,
+          "avgQuality": 8.2
+        }
+      ],
+      "trends": {
+        "labels": ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
+        "requests": [45, 68, 82, 92],
+        "costs": [22.5, 34.0, 41.0, 48.0]
+      },
+      "recommendations": [
+        {
+          "type": "optimization",
+          "message": "Privilégier gpt-3.5-turbo pour les tâches simples (économie potentielle: 15%)"
+        },
+        {
+          "type": "budget",
+          "message": "Utilisation en bonne voie, projection: 420€/500€ en fin de mois"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "class-001",
+      "name": "CM1-A",
+      "level": "CM1",
+      "year": "2024-2025",
+      "studentsCount": 28,
+      "teacherId": "teacher-001",
+      "teacherName": "Claire Dubois",
+      "subjects": ["Mathématiques", "Français", "Histoire"],
+      "createdAt": "2024-09-01T08:00:00Z"
+    },
+    {
+      "id": "class-002",
+      "name": "CM1-B",
+      "level": "CM1",
+      "year": "2024-2025",
+      "studentsCount": 27,
+      "teacherId": "teacher-001",
+      "teacherName": "Claire Dubois",
+      "subjects": ["Mathématiques", "Français", "Sciences"],
+      "createdAt": "2024-09-01T08:00:00Z"
+    },
+    {
+      "id": "class-003",
+      "name": "CM2-A",
+      "level": "CM2",
+      "year": "2024-2025",
+      "studentsCount": 29,
+      "teacherId": "teacher-002",
+      "teacherName": "Marc Lefevre",
+      "subjects": ["Mathématiques", "Français", "Géographie"],
+      "createdAt": "2024-09-01T08:00:00Z"
+    },
+    {
+      "id": "class-004",
+      "name": "CM2-B",
+      "level": "CM2",
+      "year": "2024-2025",
+      "studentsCount": 26,
+      "teacherId": "teacher-003",
+      "teacherName": "Sophie Martin",
+      "subjects": ["Mathématiques", "Français", "Arts"],
+      "createdAt": "2024-09-01T08:00:00Z"
+    }
+  ]
+}

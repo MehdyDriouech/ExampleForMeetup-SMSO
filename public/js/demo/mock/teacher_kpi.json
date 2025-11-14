@@ -1,0 +1,95 @@
+{
+  "success": true,
+  "data": {
+    "teacherId": "teacher-001",
+    "period": "2024-2025",
+    "kpis": {
+      "contentQuality": {
+        "score": 8.7,
+        "trend": "up",
+        "details": {
+          "avgThemeQuality": 8.7,
+          "themesPublished": 24,
+          "themesValidated": 22,
+          "validationRate": 0.92,
+          "avgReviewTime": 48
+        }
+      },
+      "studentEngagement": {
+        "score": 9.1,
+        "trend": "stable",
+        "details": {
+          "avgEngagementRate": 0.91,
+          "activeStudentsRate": 0.87,
+          "avgSessionDuration": 28,
+          "completionRate": 0.84
+        }
+      },
+      "pedagogicalImpact": {
+        "score": 8.3,
+        "trend": "up",
+        "details": {
+          "avgProgressRate": 0.83,
+          "avgMasteryGain": 0.15,
+          "strugglingStudentsHelped": 18,
+          "interventionEffectiveness": 0.78
+        }
+      },
+      "aiUsage": {
+        "score": 7.5,
+        "trend": "up",
+        "details": {
+          "aiGeneratedContent": 12,
+          "aiReviewsAccepted": 15,
+          "aiSuggestionsUsed": 28,
+          "budgetUsed": 145.50,
+          "budgetRemaining": 354.50
+        }
+      },
+      "collaboration": {
+        "score": 6.8,
+        "trend": "stable",
+        "details": {
+          "sharedThemes": 8,
+          "themesRemixed": 5,
+          "peerReviews": 12,
+          "commentsGiven": 34
+        }
+      }
+    },
+    "topAchievements": [
+      {
+        "category": "engagement",
+        "title": "Champion de l'engagement",
+        "description": "Taux d'engagement supérieur à 90% pendant 3 mois consécutifs",
+        "earnedAt": "2025-11-01"
+      },
+      {
+        "category": "quality",
+        "title": "Expert contenu",
+        "description": "20 thèmes validés avec note moyenne > 8.5",
+        "earnedAt": "2025-10-15"
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "medium",
+        "category": "collaboration",
+        "message": "Essayez de partager davantage vos thèmes avec vos collègues",
+        "action": "Activer le partage pour vos 3 meilleurs thèmes"
+      },
+      {
+        "priority": "low",
+        "category": "ai",
+        "message": "Vous utilisez bien l'IA, pensez à explorer les nouvelles fonctionnalités",
+        "action": "Tester la génération de parcours adaptatifs"
+      }
+    ],
+    "monthlyTrends": {
+      "labels": ["Sept", "Oct", "Nov"],
+      "contentQuality": [8.2, 8.5, 8.7],
+      "studentEngagement": [8.9, 9.0, 9.1],
+      "pedagogicalImpact": [7.8, 8.1, 8.3]
+    }
+  }
+}

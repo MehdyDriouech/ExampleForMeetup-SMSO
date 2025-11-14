@@ -1,0 +1,110 @@
+{
+  "success": true,
+  "data": {
+    "kpis": {
+      "totalStudents": 156,
+      "activeStudents": 142,
+      "avgScore": 78.5,
+      "avgMastery": 0.72,
+      "totalAssignments": 48,
+      "completedAssignments": 38,
+      "avgEngagement": 0.85,
+      "atRiskStudents": 12
+    },
+    "recentActivity": [
+      {
+        "id": 1,
+        "type": "assignment_completed",
+        "studentName": "Emma Petit",
+        "message": "a terminé 'Les fractions - Niveau 2'",
+        "score": 92,
+        "timestamp": "2025-11-14T09:30:00Z"
+      },
+      {
+        "id": 2,
+        "type": "high_score",
+        "studentName": "Lucas Martin",
+        "message": "a obtenu 98% en 'Conjugaison - Passé composé'",
+        "score": 98,
+        "timestamp": "2025-11-14T09:15:00Z"
+      },
+      {
+        "id": 3,
+        "type": "struggle_detected",
+        "studentName": "Léa Dubois",
+        "message": "rencontre des difficultés en 'Géométrie - Périmètres'",
+        "score": 45,
+        "timestamp": "2025-11-14T08:45:00Z"
+      },
+      {
+        "id": 4,
+        "type": "badge_earned",
+        "studentName": "Noah Bernard",
+        "message": "a débloqué le badge 'Expert en Tables'",
+        "timestamp": "2025-11-14T08:20:00Z"
+      }
+    ],
+    "classPerformance": [
+      {
+        "className": "CM1-A",
+        "avgScore": 82.3,
+        "avgMastery": 0.78,
+        "studentsCount": 28,
+        "activeToday": 26
+      },
+      {
+        "className": "CM1-B",
+        "avgScore": 76.8,
+        "avgMastery": 0.70,
+        "studentsCount": 27,
+        "activeToday": 24
+      },
+      {
+        "className": "CM2-A",
+        "avgScore": 79.5,
+        "avgMastery": 0.74,
+        "studentsCount": 29,
+        "activeToday": 28
+      },
+      {
+        "className": "CM2-B",
+        "avgScore": 75.2,
+        "avgMastery": 0.68,
+        "studentsCount": 26,
+        "activeToday": 23
+      }
+    ],
+    "topPerformers": [
+      {
+        "studentId": "uuid-001",
+        "name": "Lucas Martin",
+        "className": "CM2-A",
+        "avgScore": 94.5,
+        "mastery": 0.92,
+        "badgesCount": 15
+      },
+      {
+        "studentId": "uuid-002",
+        "name": "Emma Petit",
+        "className": "CM1-A",
+        "avgScore": 91.2,
+        "mastery": 0.89,
+        "badgesCount": 12
+      },
+      {
+        "studentId": "uuid-003",
+        "name": "Chloé Rousseau",
+        "className": "CM2-B",
+        "avgScore": 89.8,
+        "mastery": 0.87,
+        "badgesCount": 11
+      }
+    ],
+    "weeklyStats": {
+      "labels": ["Lun", "Mar", "Mer", "Jeu", "Ven"],
+      "engagement": [78, 82, 85, 88, 90],
+      "completedExercises": [120, 145, 156, 178, 165],
+      "avgScore": [75, 77, 79, 81, 80]
+    }
+  }
+}

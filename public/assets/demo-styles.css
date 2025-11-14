@@ -1,0 +1,171 @@
+/**
+ * Styles pour le Mode Démo (Sprint 17)
+ */
+
+/* Bandeau Mode Démo */
+.demo-banner {
+    background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+    color: white;
+    padding: 12px 20px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.demo-banner a {
+    color: white;
+    text-decoration: underline;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.demo-banner a:hover {
+    opacity: 0.8;
+}
+
+/* Divider pour séparer login et bouton démo */
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 24px 0;
+    color: #6b7280;
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.divider span {
+    padding: 0 16px;
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* Bouton Mode Démo */
+.demo-btn {
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.demo-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.demo-btn:active {
+    transform: translateY(0);
+}
+
+/* Container du bouton démo */
+#demo-mode-container {
+    margin-top: 8px;
+}
+
+#demo-mode-container .hint {
+    margin-top: 12px;
+    text-align: center;
+}
+
+/* Overlay et Tooltip pour le Tour guidé */
+#demo-tour-overlay {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+#demo-tour-tooltip {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -40%);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}
+
+/* Badge "DÉMO" sur les cartes en mode démo */
+.demo-badge {
+    display: inline-block;
+    background: #ff6b35;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Watermark subtil sur les graphiques en mode démo */
+.demo-watermark {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    color: rgba(255, 107, 53, 0.3);
+    font-size: 12px;
+    font-weight: 600;
+    pointer-events: none;
+}
+
+/* Animations pour attirer l'attention */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.demo-highlight {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .demo-banner {
+        font-size: 12px;
+        padding: 10px 16px;
+    }
+
+    #demo-tour-tooltip {
+        max-width: 90%;
+        padding: 20px;
+    }
+
+    .demo-btn {
+        padding: 12px 16px;
+        font-size: 14px;
+    }
+}

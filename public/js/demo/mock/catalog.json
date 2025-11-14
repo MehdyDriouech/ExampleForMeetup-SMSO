@@ -1,0 +1,117 @@
+{
+  "success": true,
+  "data": {
+    "categories": [
+      {
+        "id": "cat-math",
+        "name": "Mathématiques",
+        "icon": "🔢",
+        "themesCount": 45,
+        "subcategories": [
+          { "id": "cat-math-calc", "name": "Calcul", "count": 15 },
+          { "id": "cat-math-geo", "name": "Géométrie", "count": 12 },
+          { "id": "cat-math-prob", "name": "Problèmes", "count": 10 },
+          { "id": "cat-math-num", "name": "Numération", "count": 8 }
+        ]
+      },
+      {
+        "id": "cat-fr",
+        "name": "Français",
+        "icon": "📚",
+        "themesCount": 38,
+        "subcategories": [
+          { "id": "cat-fr-ortho", "name": "Orthographe", "count": 12 },
+          { "id": "cat-fr-conj", "name": "Conjugaison", "count": 10 },
+          { "id": "cat-fr-gram", "name": "Grammaire", "count": 9 },
+          { "id": "cat-fr-vocab", "name": "Vocabulaire", "count": 7 }
+        ]
+      },
+      {
+        "id": "cat-sci",
+        "name": "Sciences",
+        "icon": "🔬",
+        "themesCount": 22,
+        "subcategories": [
+          { "id": "cat-sci-vie", "name": "Sciences de la vie", "count": 10 },
+          { "id": "cat-sci-terre", "name": "Sciences de la terre", "count": 8 },
+          { "id": "cat-sci-techno", "name": "Technologie", "count": 4 }
+        ]
+      },
+      {
+        "id": "cat-hist",
+        "name": "Histoire",
+        "icon": "🏛️",
+        "themesCount": 18,
+        "subcategories": [
+          { "id": "cat-hist-anc", "name": "Histoire ancienne", "count": 6 },
+          { "id": "cat-hist-mod", "name": "Histoire moderne", "count": 7 },
+          { "id": "cat-hist-cont", "name": "Histoire contemporaine", "count": 5 }
+        ]
+      }
+    ],
+    "featured": [
+      {
+        "id": "theme-math-001",
+        "title": "Fractions et décimaux",
+        "subject": "Mathématiques",
+        "level": "CM1",
+        "qualityScore": 8.9,
+        "usageCount": 142,
+        "authorName": "Claire Dubois",
+        "thumbnail": "📊"
+      },
+      {
+        "id": "theme-fr-002",
+        "title": "Conjugaison des temps",
+        "subject": "Français",
+        "level": "CM1",
+        "qualityScore": 9.2,
+        "usageCount": 198,
+        "authorName": "Claire Dubois",
+        "thumbnail": "✍️"
+      },
+      {
+        "id": "theme-sci-001",
+        "title": "Géologie - Les volcans",
+        "subject": "Sciences",
+        "level": "CM2",
+        "qualityScore": 8.5,
+        "usageCount": 112,
+        "authorName": "Sophie Martin",
+        "thumbnail": "🌋"
+      }
+    ],
+    "recent": [
+      {
+        "id": "theme-hist-005",
+        "title": "La révolution française",
+        "subject": "Histoire",
+        "level": "CM2",
+        "publishedAt": "2025-11-10T10:00:00Z",
+        "authorName": "Marc Lefevre"
+      },
+      {
+        "id": "theme-math-012",
+        "title": "Les unités de mesure",
+        "subject": "Mathématiques",
+        "level": "CM1",
+        "publishedAt": "2025-11-08T14:30:00Z",
+        "authorName": "Sophie Martin"
+      }
+    ],
+    "trending": [
+      {
+        "id": "theme-fr-002",
+        "title": "Conjugaison des temps",
+        "usageGrowth": 145,
+        "trend": "up"
+      },
+      {
+        "id": "theme-sci-001",
+        "title": "Géologie - Les volcans",
+        "usageGrowth": 89,
+        "trend": "up"
+      }
+    ]
+  }
+}

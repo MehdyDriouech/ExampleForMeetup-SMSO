@@ -1,0 +1,136 @@
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalStudents": 156,
+      "atRiskCount": 12,
+      "atRiskPercentage": 7.7,
+      "criticalCount": 3,
+      "warningCount": 9
+    },
+    "riskFactors": {
+      "lowEngagement": 5,
+      "poorPerformance": 4,
+      "decliningTrend": 6,
+      "prolongedInactivity": 2
+    },
+    "students": [
+      {
+        "id": 3,
+        "uuid_scolaire": "uuid-demo-003",
+        "firstname": "Léa",
+        "lastname": "Dubois",
+        "classId": "class-001",
+        "className": "CM1-A",
+        "riskLevel": "critical",
+        "riskScore": 8.5,
+        "factors": [
+          {
+            "type": "performance",
+            "severity": "high",
+            "description": "Score moyen < 70% depuis 3 semaines",
+            "value": 68.3
+          },
+          {
+            "type": "engagement",
+            "severity": "medium",
+            "description": "Taux de complétion en baisse (83% → 65%)",
+            "value": 0.65
+          },
+          {
+            "type": "struggles",
+            "severity": "high",
+            "description": "Difficultés persistantes en Géométrie et Fractions",
+            "subjects": ["Géométrie", "Fractions"]
+          }
+        ],
+        "recommendations": [
+          "Organiser un entretien individuel",
+          "Proposer des exercices de remédiation ciblés",
+          "Réduire temporairement la difficulté",
+          "Contacter les parents pour un suivi"
+        ],
+        "lastActivity": "2025-11-13T16:30:00Z",
+        "trend": "declining"
+      },
+      {
+        "id": 12,
+        "uuid_scolaire": "uuid-demo-012",
+        "firstname": "Tom",
+        "lastname": "Leroy",
+        "classId": "class-002",
+        "className": "CM1-B",
+        "riskLevel": "warning",
+        "riskScore": 6.2,
+        "factors": [
+          {
+            "type": "inactivity",
+            "severity": "medium",
+            "description": "Pas d'activité depuis 5 jours",
+            "value": 5
+          },
+          {
+            "type": "engagement",
+            "severity": "medium",
+            "description": "Durée de session en baisse",
+            "value": 0.58
+          }
+        ],
+        "recommendations": [
+          "Envoyer un rappel à l'élève",
+          "Vérifier si problèmes techniques",
+          "Proposer un contenu plus engageant"
+        ],
+        "lastActivity": "2025-11-09T14:20:00Z",
+        "trend": "stable"
+      },
+      {
+        "id": 23,
+        "uuid_scolaire": "uuid-demo-023",
+        "firstname": "Sarah",
+        "lastname": "Girard",
+        "classId": "class-003",
+        "className": "CM2-A",
+        "riskLevel": "warning",
+        "riskScore": 5.8,
+        "factors": [
+          {
+            "type": "performance",
+            "severity": "medium",
+            "description": "Baisse de performance sur les 2 dernières semaines",
+            "value": 72.1
+          },
+          {
+            "type": "mastery",
+            "severity": "low",
+            "description": "Maîtrise stagnante",
+            "value": 0.68
+          }
+        ],
+        "recommendations": [
+          "Analyser les difficultés spécifiques",
+          "Proposer des révisions personnalisées",
+          "Encourager avec des défis adaptés"
+        ],
+        "lastActivity": "2025-11-14T10:15:00Z",
+        "trend": "declining"
+      }
+    ],
+    "interventions": [
+      {
+        "studentId": 3,
+        "type": "remediation",
+        "status": "planned",
+        "createdAt": "2025-11-14T08:00:00Z",
+        "description": "Séance de soutien Géométrie - Groupe petit effectif"
+      },
+      {
+        "studentId": 12,
+        "type": "reengagement",
+        "status": "in_progress",
+        "createdAt": "2025-11-13T15:00:00Z",
+        "description": "Email de relance envoyé + contenu bonus débloqué"
+      }
+    ]
+  }
+}

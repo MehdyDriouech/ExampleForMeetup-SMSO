@@ -5,9 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Study-mate School Orchestrator</title>
     <link rel="stylesheet" href="assets/styles.css">
+    <link rel="stylesheet" href="assets/demo-styles.css">
 </head>
 <body>
     <div id="app">
+        <!-- Bandeau Mode Démo (Sprint 17) -->
+        <div id="demo-banner" class="demo-banner" style="display: none;">
+            ⚠️ Mode Démo - Données fictives • <a href="#" onclick="exitDemoMode(); return false;">Quitter la démo</a>
+        </div>
+
         <header class="header">
             <div class="container">
                 <h1>🎓 Study-mate School Orchestrator</h1>
@@ -57,22 +63,36 @@
                             <form id="login-form">
                                 <div class="form-group">
                                     <label for="email">Email</label>
-                                    <input type="email" id="email" required 
+                                    <input type="email" id="email" required
                                            placeholder="claire.dubois@ife-paris.fr">
                                 </div>
-                                
+
                                 <div class="form-group">
                                     <label for="password">Mot de passe</label>
-                                    <input type="password" id="password" required 
+                                    <input type="password" id="password" required
                                            placeholder="Mot de passe">
                                 </div>
-                                
+
                                 <button type="submit">Se connecter</button>
-                                
+
                                 <p class="hint">
                                     <small>Compte de test : claire.dubois@ife-paris.fr / Ergo2025!</small>
                                 </p>
                             </form>
+
+                            <div class="divider">
+                                <span>OU</span>
+                            </div>
+
+                            <!-- Bouton Mode Démo (Sprint 17) -->
+                            <div id="demo-mode-container" style="display: none;">
+                                <button id="demo-mode-btn" class="demo-btn" onclick="startDemoMode()">
+                                    🎯 Découvrir la démo
+                                </button>
+                                <p class="hint">
+                                    <small>Explorez l'application sans compte avec des données fictives</small>
+                                </p>
+                            </div>
                         </div>
                     </div>
                     
@@ -124,6 +144,9 @@
         </footer>
     </div>
     
+    <!-- Mode Démo (Sprint 17) -->
+    <script type="module" src="js/demo/FakeRouter.js"></script>
+    <script type="module" src="js/demo/demo_tour.js"></script>
     <script type="module" src="js/app.js"></script>
 </body>
 </html>

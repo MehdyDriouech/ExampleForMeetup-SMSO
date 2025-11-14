@@ -1,0 +1,166 @@
+{
+  "success": true,
+  "data": {
+    "overview": {
+      "totalThemes": 24,
+      "avgQualityScore": 8.4,
+      "validatedThemes": 22,
+      "pendingReview": 2,
+      "issuesFound": 5,
+      "criticalIssues": 1
+    },
+    "qualityMetrics": {
+      "pedagogical": {
+        "score": 8.7,
+        "details": {
+          "clarity": 9.1,
+          "progression": 8.5,
+          "adaptiveness": 8.4,
+          "feedback": 8.8
+        }
+      },
+      "technical": {
+        "score": 8.2,
+        "details": {
+          "schemaCompliance": 9.5,
+          "mediaQuality": 8.0,
+          "accessibility": 7.8,
+          "performance": 8.3
+        }
+      },
+      "engagement": {
+        "score": 8.3,
+        "details": {
+          "interactivity": 8.5,
+          "gamification": 8.0,
+          "visual": 8.4,
+          "variety": 8.3
+        }
+      }
+    },
+    "issues": [
+      {
+        "id": "issue-001",
+        "severity": "critical",
+        "themeId": "theme-math-003",
+        "themeName": "Géométrie plane",
+        "type": "pedagogical",
+        "category": "difficulty_mismatch",
+        "message": "Écart important entre difficulté annoncée (medium) et difficulté réelle (hard)",
+        "evidence": {
+          "declaredDifficulty": "medium",
+          "computedDifficulty": "hard",
+          "avgScore": 73.5,
+          "completionRate": 0.67
+        },
+        "recommendation": "Réévaluer la difficulté ou ajouter des aides contextuelles",
+        "detectedAt": "2025-11-13T10:30:00Z",
+        "status": "open"
+      },
+      {
+        "id": "issue-002",
+        "severity": "medium",
+        "themeId": "theme-fr-005",
+        "themeName": "Les adjectifs qualificatifs",
+        "type": "technical",
+        "category": "missing_media",
+        "message": "3 questions sans support visuel alors que recommandé pour le niveau CM1",
+        "evidence": {
+          "questionsWithoutMedia": 3,
+          "totalQuestions": 18
+        },
+        "recommendation": "Ajouter des illustrations pour les questions 5, 12 et 15",
+        "detectedAt": "2025-11-12T15:20:00Z",
+        "status": "open"
+      },
+      {
+        "id": "issue-003",
+        "severity": "low",
+        "themeId": "theme-sci-001",
+        "themeName": "Géologie - Les volcans",
+        "type": "engagement",
+        "category": "low_variety",
+        "message": "Tous les items sont de type QCM, variété limitée",
+        "evidence": {
+          "qcmCount": 20,
+          "otherTypes": 0
+        },
+        "recommendation": "Ajouter des questions ouvertes ou vrai/faux",
+        "detectedAt": "2025-11-11T09:45:00Z",
+        "status": "acknowledged"
+      },
+      {
+        "id": "issue-004",
+        "severity": "medium",
+        "themeId": "theme-math-007",
+        "themeName": "Les divisions",
+        "type": "pedagogical",
+        "category": "unclear_feedback",
+        "message": "Feedbacks génériques, peu personnalisés",
+        "evidence": {
+          "genericFeedbacks": 12,
+          "personalizedFeedbacks": 3
+        },
+        "recommendation": "Enrichir les feedbacks avec explications contextuelles",
+        "detectedAt": "2025-11-10T14:10:00Z",
+        "status": "in_progress"
+      },
+      {
+        "id": "issue-005",
+        "severity": "low",
+        "themeId": "theme-hist-002",
+        "themeName": "Les grandes découvertes",
+        "type": "technical",
+        "category": "accessibility",
+        "message": "Textes alternatifs manquants pour 2 images",
+        "evidence": {
+          "imagesWithoutAlt": 2,
+          "totalImages": 8
+        },
+        "recommendation": "Ajouter des attributs alt descriptifs",
+        "detectedAt": "2025-11-09T11:30:00Z",
+        "status": "resolved"
+      }
+    ],
+    "topQualityThemes": [
+      {
+        "id": "theme-fr-002",
+        "title": "Conjugaison des temps",
+        "qualityScore": 9.2,
+        "strengths": ["Progression claire", "Feedbacks excellents", "Variété des items"]
+      },
+      {
+        "id": "theme-math-001",
+        "title": "Fractions et décimaux",
+        "qualityScore": 8.9,
+        "strengths": ["Adaptativité", "Support visuel", "Difficulté bien calibrée"]
+      },
+      {
+        "id": "theme-sci-001",
+        "title": "Géologie - Les volcans",
+        "qualityScore": 8.5,
+        "strengths": ["Contenu riche", "Médias de qualité", "Engagement élevé"]
+      }
+    ],
+    "recentReviews": [
+      {
+        "themeId": "theme-math-001",
+        "reviewerId": "validator-001",
+        "reviewerName": "Pierre Dupont",
+        "status": "validated",
+        "score": 8.9,
+        "comment": "Excellent thème, bien structuré et progression adaptée",
+        "reviewedAt": "2025-11-13T16:00:00Z"
+      },
+      {
+        "themeId": "theme-fr-005",
+        "reviewerId": "validator-002",
+        "reviewerName": "Marie Leclerc",
+        "status": "requires_changes",
+        "score": 7.2,
+        "comment": "Bon contenu mais manque de supports visuels",
+        "reviewedAt": "2025-11-12T14:30:00Z"
+      }
+    ]
+  }
+}

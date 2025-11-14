@@ -1,0 +1,151 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "uuid_scolaire": "uuid-demo-001",
+      "firstname": "Emma",
+      "lastname": "Petit",
+      "email_scolaire": "emma.petit@ife-demo.fr",
+      "classId": "class-001",
+      "className": "CM1-A",
+      "dateOfBirth": "2014-03-15",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 91.2,
+        "mastery": 0.89,
+        "totalExercises": 245,
+        "completedExercises": 238,
+        "timeSpent": 3420,
+        "badgesCount": 12,
+        "streak": 15
+      },
+      "preferences": {
+        "difficulty": "adaptive",
+        "theme": "nature"
+      }
+    },
+    {
+      "id": 2,
+      "uuid_scolaire": "uuid-demo-002",
+      "firstname": "Lucas",
+      "lastname": "Martin",
+      "email_scolaire": "lucas.martin@ife-demo.fr",
+      "classId": "class-003",
+      "className": "CM2-A",
+      "dateOfBirth": "2013-07-22",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 94.5,
+        "mastery": 0.92,
+        "totalExercises": 312,
+        "completedExercises": 305,
+        "timeSpent": 4150,
+        "badgesCount": 15,
+        "streak": 22
+      },
+      "preferences": {
+        "difficulty": "challenging",
+        "theme": "space"
+      }
+    },
+    {
+      "id": 3,
+      "uuid_scolaire": "uuid-demo-003",
+      "firstname": "Léa",
+      "lastname": "Dubois",
+      "email_scolaire": "lea.dubois@ife-demo.fr",
+      "classId": "class-001",
+      "className": "CM1-A",
+      "dateOfBirth": "2014-01-10",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 68.3,
+        "mastery": 0.62,
+        "totalExercises": 198,
+        "completedExercises": 165,
+        "timeSpent": 2340,
+        "badgesCount": 6,
+        "streak": 3,
+        "atRisk": true,
+        "struggles": ["Géométrie", "Fractions"]
+      },
+      "preferences": {
+        "difficulty": "easy",
+        "theme": "animals"
+      }
+    },
+    {
+      "id": 4,
+      "uuid_scolaire": "uuid-demo-004",
+      "firstname": "Noah",
+      "lastname": "Bernard",
+      "email_scolaire": "noah.bernard@ife-demo.fr",
+      "classId": "class-002",
+      "className": "CM1-B",
+      "dateOfBirth": "2014-05-18",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 85.7,
+        "mastery": 0.81,
+        "totalExercises": 267,
+        "completedExercises": 254,
+        "timeSpent": 3680,
+        "badgesCount": 10,
+        "streak": 12
+      },
+      "preferences": {
+        "difficulty": "adaptive",
+        "theme": "ocean"
+      }
+    },
+    {
+      "id": 5,
+      "uuid_scolaire": "uuid-demo-005",
+      "firstname": "Chloé",
+      "lastname": "Rousseau",
+      "email_scolaire": "chloe.rousseau@ife-demo.fr",
+      "classId": "class-004",
+      "className": "CM2-B",
+      "dateOfBirth": "2013-11-30",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 89.8,
+        "mastery": 0.87,
+        "totalExercises": 289,
+        "completedExercises": 278,
+        "timeSpent": 3920,
+        "badgesCount": 11,
+        "streak": 18
+      },
+      "preferences": {
+        "difficulty": "adaptive",
+        "theme": "forest"
+      }
+    },
+    {
+      "id": 6,
+      "uuid_scolaire": "uuid-demo-006",
+      "firstname": "Louis",
+      "lastname": "Moreau",
+      "email_scolaire": "louis.moreau@ife-demo.fr",
+      "classId": "class-003",
+      "className": "CM2-A",
+      "dateOfBirth": "2013-09-05",
+      "enrolledAt": "2024-09-01",
+      "stats": {
+        "avgScore": 76.4,
+        "mastery": 0.71,
+        "totalExercises": 221,
+        "completedExercises": 203,
+        "timeSpent": 2850,
+        "badgesCount": 7,
+        "streak": 5
+      },
+      "preferences": {
+        "difficulty": "adaptive",
+        "theme": "sports"
+      }
+    }
+  ]
+}

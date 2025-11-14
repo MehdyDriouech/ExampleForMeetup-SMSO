@@ -1,0 +1,66 @@
+{
+  "success": true,
+  "data": {
+    "period": "last_30_days",
+    "summary": {
+      "totalSessions": 3458,
+      "totalUsers": 156,
+      "avgSessionDuration": 25.3,
+      "totalPageViews": 18942,
+      "bounceRate": 0.12
+    },
+    "userEngagement": {
+      "dailyActiveUsers": 142,
+      "weeklyActiveUsers": 154,
+      "monthlyActiveUsers": 156,
+      "avgSessionsPerUser": 22.2,
+      "retentionRate": 0.91
+    },
+    "performance": {
+      "avgPageLoadTime": 1.2,
+      "avgApiResponseTime": 145,
+      "errorRate": 0.008,
+      "availability": 99.8
+    },
+    "features": {
+      "mostUsed": [
+        { "feature": "quiz", "usage": 1245, "percentage": 36 },
+        { "feature": "flashcards", "usage": 892, "percentage": 26 },
+        { "feature": "dashboard", "usage": 654, "percentage": 19 },
+        { "feature": "progress", "usage": 445, "percentage": 13 },
+        { "feature": "badges", "usage": 222, "percentage": 6 }
+      ]
+    },
+    "devices": {
+      "desktop": 45,
+      "tablet": 38,
+      "mobile": 17
+    },
+    "browsers": {
+      "chrome": 62,
+      "safari": 24,
+      "firefox": 10,
+      "edge": 4
+    },
+    "errors": [
+      {
+        "type": "api_error",
+        "endpoint": "/api/themes",
+        "count": 12,
+        "lastOccurrence": "2025-11-13T15:30:00Z"
+      },
+      {
+        "type": "timeout",
+        "endpoint": "/api/analytics/heatmap",
+        "count": 5,
+        "lastOccurrence": "2025-11-12T10:20:00Z"
+      }
+    ],
+    "trends": {
+      "labels": ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
+      "sessions": [756, 834, 912, 956],
+      "users": [145, 149, 152, 154],
+      "avgDuration": [23.5, 24.2, 25.1, 25.8]
+    }
+  }
+}
