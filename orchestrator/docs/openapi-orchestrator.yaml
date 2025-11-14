@@ -110,6 +110,8 @@ tags:
     description: 'Sprint 13: Interoperability - Export de thèmes vers formats LMS (QTI 2.2, JSON) pour Moodle, Canvas, Blackboard'
   - name: User
     description: 'Sprint 13: User Management - Gestion de profil utilisateur et onboarding'
+  - name: Admin
+    description: 'Sprint 14: Admin & Tenant Management - Gestion utilisateurs, classes, rôles, licences, audit log (admin/direction only)'
 
 paths:
   /api/health:

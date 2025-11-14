@@ -49,9 +49,11 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL COMMENT 'bcrypt hash',
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100) NOT NULL,
-    role ENUM('admin', 'direction', 'teacher', 'intervenant') NOT NULL,
+    role ENUM('admin', 'direction', 'teacher', 'inspector', 'referent', 'intervenant') NOT NULL,
     status ENUM('active', 'inactive', 'pending') DEFAULT 'pending',
     last_login_at TIMESTAMP NULL,
+    deactivated_at TIMESTAMP NULL COMMENT 'Date de désactivation',
+    deactivated_by VARCHAR(50) NULL COMMENT 'User ID qui a désactivé',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
@@ -304,6 +306,89 @@ CREATE TABLE sessions (
     INDEX idx_user (user_id),
     INDEX idx_token (token_hash),
     INDEX idx_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE: user_class_assignments (Rattachements enseignants/classes)
+-- ============================================================
+CREATE TABLE user_class_assignments (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    class_id VARCHAR(50) NOT NULL,
+    tenant_id VARCHAR(50) NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE COMMENT 'Enseignant principal',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_user_class (user_id, class_id),
+    INDEX idx_user (user_id),
+    INDEX idx_class (class_id),
+    INDEX idx_tenant (tenant_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE: roles_matrix (Configuration des rôles et permissions)
+-- ============================================================
+CREATE TABLE roles_matrix (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    role ENUM('admin', 'direction', 'teacher', 'inspector', 'referent', 'intervenant') NOT NULL,
+    permission_key VARCHAR(100) NOT NULL COMMENT 'ex: assignments:create, users:read',
+    allowed BOOLEAN DEFAULT TRUE,
+    custom_config JSON DEFAULT NULL COMMENT 'Configuration additionnelle',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    UNIQUE KEY unique_tenant_role_perm (tenant_id, role, permission_key),
+    INDEX idx_tenant_role (tenant_id, role)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE: tenant_licences (Quotas et licences établissement)
+-- ============================================================
+CREATE TABLE tenant_licences (
+    tenant_id VARCHAR(50) PRIMARY KEY,
+    max_teachers INT DEFAULT 10 COMMENT 'Nombre max enseignants',
+    max_students INT DEFAULT 100 COMMENT 'Nombre max élèves',
+    max_classes INT DEFAULT 20 COMMENT 'Nombre max classes',
+    used_teachers INT DEFAULT 0 COMMENT 'Nombre enseignants utilisés',
+    used_students INT DEFAULT 0 COMMENT 'Nombre élèves utilisés',
+    used_classes INT DEFAULT 0 COMMENT 'Nombre classes utilisées',
+    status ENUM('active', 'warning', 'suspended', 'expired') DEFAULT 'active',
+    subscription_type VARCHAR(50) DEFAULT 'standard' COMMENT 'Type abonnement',
+    expires_at TIMESTAMP NULL COMMENT 'Date expiration licence',
+    last_check_at TIMESTAMP NULL COMMENT 'Dernière vérification quotas',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    INDEX idx_status (status),
+    INDEX idx_expires (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================================
+-- TABLE: audit_log (Historique des actions admin)
+-- ============================================================
+CREATE TABLE audit_log (
+    id VARCHAR(50) PRIMARY KEY,
+    tenant_id VARCHAR(50) NOT NULL,
+    actor_user_id VARCHAR(50) NULL COMMENT 'User qui a effectué l\'action',
+    action_type VARCHAR(50) NOT NULL COMMENT 'create, update, delete, deactivate, etc.',
+    target_type VARCHAR(50) NOT NULL COMMENT 'user, class, role, licence, etc.',
+    target_id VARCHAR(50) NULL COMMENT 'ID de la cible',
+    payload JSON DEFAULT NULL COMMENT 'Détails de l\'action',
+    ip_address VARCHAR(45) NULL,
+    user_agent TEXT NULL,
+    result ENUM('success', 'failed') DEFAULT 'success',
+    error_message TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_tenant_date (tenant_id, created_at),
+    INDEX idx_actor (actor_user_id),
+    INDEX idx_action_type (action_type),
+    INDEX idx_target (target_type, target_id),
+    INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================

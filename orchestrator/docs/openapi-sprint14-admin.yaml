@@ -1,0 +1,882 @@
+# OpenAPI Sprint 14 - Admin Tenant Management
+# Extension pour la documentation principale
+
+paths:
+  /api/admin/users:
+    get:
+      tags:
+        - Admin
+      summary: Liste tous les utilisateurs du tenant
+      description: |
+        Récupère la liste de tous les utilisateurs (enseignants, admins, direction)
+        avec leurs rattachements de classes. Filtrable par rôle, statut et recherche.
+      operationId: listUsers
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: ID du tenant
+        - name: role
+          in: query
+          schema:
+            type: string
+            enum: [admin, direction, teacher, inspector, referent, intervenant]
+          description: Filtrer par rôle
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, pending]
+          description: Filtrer par statut
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Recherche par nom ou email
+      responses:
+        '200':
+          description: Liste des utilisateurs
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  total:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    post:
+      tags:
+        - Admin
+      summary: Créer un nouvel utilisateur
+      description: |
+        Crée un compte utilisateur avec mot de passe temporaire.
+        Envoie optionnellement une invitation par email.
+        Vérifie les quotas de licences avant création.
+      operationId: createUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - firstname
+                - lastname
+                - role
+              properties:
+                email:
+                  type: string
+                  format: email
+                firstname:
+                  type: string
+                  minLength: 2
+                lastname:
+                  type: string
+                  minLength: 2
+                role:
+                  type: string
+                  enum: [admin, direction, teacher, inspector, referent, intervenant]
+                class_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: IDs des classes à associer
+                send_invitation:
+                  type: boolean
+                  default: true
+                  description: Envoyer email d'invitation
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  email:
+                    type: string
+                  firstname:
+                    type: string
+                  lastname:
+                    type: string
+                  role:
+                    type: string
+                  status:
+                    type: string
+                  tempPassword:
+                    type: string
+                    nullable: true
+                    description: Mot de passe temporaire si invitation non envoyée
+                  invitationSent:
+                    type: boolean
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          description: Quota dépassé ou permission refusée
+        '409':
+          description: Email déjà utilisé
+
+  /api/admin/users/{id}:
+    get:
+      tags:
+        - Admin
+      summary: Détails d'un utilisateur
+      operationId: getUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails de l'utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDetails'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - Admin
+      summary: Modifier un utilisateur
+      operationId: updateUser
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                lastname:
+                  type: string
+                role:
+                  type: string
+                  enum: [admin, direction, teacher, inspector, referent, intervenant]
+                class_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Utilisateur mis à jour
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/users/{id}/status:
+    patch:
+      tags:
+        - Admin
+      summary: Changer le statut d'un utilisateur
+      description: Active ou désactive un compte utilisateur
+      operationId: changeUserStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [active, inactive]
+                reason:
+                  type: string
+                  description: Raison de la désactivation
+      responses:
+        '200':
+          description: Statut mis à jour
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/classes:
+    get:
+      tags:
+        - Admin
+      summary: Liste toutes les classes du tenant
+      operationId: listClasses
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, archived]
+        - name: promo_id
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des classes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  classes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClassSummary'
+                  total:
+                    type: integer
+
+    post:
+      tags:
+        - Admin
+      summary: Créer une nouvelle classe
+      operationId: createClass
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - promo_id
+              properties:
+                name:
+                  type: string
+                promo_id:
+                  type: string
+                description:
+                  type: string
+                teacher_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Classe créée
+        '403':
+          description: Quota de classes dépassé
+
+  /api/admin/classes/{id}:
+    get:
+      tags:
+        - Admin
+      summary: Détails d'une classe
+      operationId: getClass
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails de la classe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClassDetails'
+
+    patch:
+      tags:
+        - Admin
+      summary: Modifier une classe
+      operationId: updateClass
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, archived]
+                teacher_ids:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Classe mise à jour
+
+    delete:
+      tags:
+        - Admin
+      summary: Archiver une classe
+      description: Archivage logique - conserve les statistiques
+      operationId: archiveClass
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Classe archivée
+
+  /api/admin/roles:
+    get:
+      tags:
+        - Admin
+      summary: Récupérer la matrice de rôles et permissions
+      operationId: getRolesMatrix
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matrice des rôles
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matrix:
+                    type: object
+                    description: Permissions par rôle
+                  roles:
+                    type: array
+                    items:
+                      type: string
+                  resources:
+                    type: array
+                    items:
+                      type: string
+
+    put:
+      tags:
+        - Admin
+      summary: Mettre à jour la matrice de rôles
+      description: Seul l'admin peut modifier. Les permissions critiques d'admin sont protégées.
+      operationId: updateRolesMatrix
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                changes:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                      permission_key:
+                        type: string
+                      allowed:
+                        type: boolean
+      responses:
+        '200':
+          description: Matrice mise à jour
+
+  /api/admin/licences:
+    get:
+      tags:
+        - Admin
+      summary: Récupérer les informations de licence
+      description: Quotas, usage actuel, statut d'abonnement
+      operationId: getLicences
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Informations de licence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantLicence'
+
+    put:
+      tags:
+        - Admin
+      summary: Mettre à jour les quotas de licence
+      description: Seul l'admin peut modifier
+      operationId: updateLicences
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                max_teachers:
+                  type: integer
+                max_students:
+                  type: integer
+                max_classes:
+                  type: integer
+                status:
+                  type: string
+                  enum: [active, warning, suspended, expired]
+                subscription_type:
+                  type: string
+                expires_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Licence mise à jour
+
+  /api/admin/audit:
+    get:
+      tags:
+        - Admin
+      summary: Récupérer l'historique d'audit
+      description: Logs en lecture seule des actions administratives
+      operationId: getAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: action_type
+          in: query
+          schema:
+            type: string
+        - name: target_type
+          in: query
+          schema:
+            type: string
+        - name: actor_user_id
+          in: query
+          schema:
+            type: string
+        - name: result
+          in: query
+          schema:
+            type: string
+            enum: [success, failed]
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Logs d'audit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      hasMore:
+                        type: boolean
+                  filters:
+                    type: object
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        firstname:
+          type: string
+        lastname:
+          type: string
+        role:
+          type: string
+          enum: [admin, direction, teacher, inspector, referent, intervenant]
+        status:
+          type: string
+          enum: [active, inactive, pending]
+        lastLoginAt:
+          type: string
+          format: date-time
+          nullable: true
+        deactivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        classes:
+          type: object
+          nullable: true
+          properties:
+            ids:
+              type: array
+              items:
+                type: string
+            names:
+              type: array
+              items:
+                type: string
+
+    UserDetails:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            deactivatedBy:
+              type: string
+              nullable: true
+            classes:
+              type: array
+              items:
+                type: object
+                properties:
+                  class_id:
+                    type: string
+                  class_name:
+                    type: string
+                  is_primary:
+                    type: boolean
+
+    ClassSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        promoId:
+          type: string
+        promoName:
+          type: string
+        level:
+          type: string
+        status:
+          type: string
+          enum: [active, archived]
+        studentCount:
+          type: integer
+        teacherCount:
+          type: integer
+        teacherNames:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ClassDetails:
+      allOf:
+        - $ref: '#/components/schemas/ClassSummary'
+        - type: object
+          properties:
+            students:
+              type: array
+              items:
+                type: object
+            teachers:
+              type: array
+              items:
+                type: object
+
+    TenantLicence:
+      type: object
+      properties:
+        tenantId:
+          type: string
+        maxTeachers:
+          type: integer
+        maxStudents:
+          type: integer
+        maxClasses:
+          type: integer
+        usedTeachers:
+          type: integer
+        usedStudents:
+          type: integer
+        usedClasses:
+          type: integer
+        usage:
+          type: object
+          properties:
+            teachers:
+              type: number
+              description: Pourcentage d'utilisation
+            students:
+              type: number
+            classes:
+              type: number
+        warningLevel:
+          type: string
+          enum: [ok, info, warning, critical]
+        status:
+          type: string
+          enum: [active, warning, suspended, expired]
+        subscriptionType:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        lastCheckAt:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        actorUserId:
+          type: string
+          nullable: true
+        actorEmail:
+          type: string
+          nullable: true
+        actorName:
+          type: string
+          nullable: true
+        actionType:
+          type: string
+        targetType:
+          type: string
+        targetId:
+          type: string
+          nullable: true
+        payload:
+          type: object
+          nullable: true
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+        result:
+          type: string
+          enum: [success, failed]
+        errorMessage:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+  responses:
+    Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    Forbidden:
+      description: Accès refusé
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+              required_permission:
+                type: string
+              your_role:
+                type: string
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+    ValidationError:
+      description: Erreur de validation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              message:
+                type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
