@@ -1,0 +1,954 @@
+# OpenAPI Sprint 15 - IA Governance + Students + RGPD
+# Extension pour la documentation principale
+
+openapi: 3.0.0
+info:
+  title: StudyMate School Orchestrator - Sprint 15 IA & RGPD
+  version: 15.0.0
+  description: |
+    API pour la gouvernance IA, la gestion des élèves avec UUID,
+    les politiques IA, les budgets et l'audit des interactions IA.
+
+paths:
+  # ============================================
+  # Students Management
+  # ============================================
+  /api/admin/students:
+    post:
+      tags:
+        - Admin - Students
+      summary: Créer un élève avec UUID
+      description: |
+        Génère automatiquement un UUID pédagogique et un UUID social
+        pour l'élève. Vérifie les quotas de licences avant création.
+      operationId: createStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - firstname
+                - lastname
+                - class_id
+              properties:
+                firstname:
+                  type: string
+                  minLength: 2
+                lastname:
+                  type: string
+                  minLength: 2
+                class_id:
+                  type: string
+                  description: ID de la classe
+                promo_id:
+                  type: string
+                  description: ID de la promotion
+                email:
+                  type: string
+                  format: email
+                  nullable: true
+                phone:
+                  type: string
+                  nullable: true
+      responses:
+        '201':
+          description: Élève créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/StudentWithUUID'
+        '403':
+          description: Quota dépassé
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/admin/students/{uuid}/export:
+    get:
+      tags:
+        - Admin - Students
+        - RGPD
+      summary: Export RGPD des données élève
+      description: |
+        Exporte toutes les données d'un élève au format JSON
+        pour répondre aux demandes RGPD (droit d'accès).
+        Inclut les missions, scores, badges et interactions sociales.
+      operationId: exportStudentData
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID pédagogique de l'élève
+      responses:
+        '200':
+          description: Données exportées
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudentRGPDExport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/students/{uuid}/pseudonymize:
+    patch:
+      tags:
+        - Admin - Students
+        - RGPD
+      summary: Pseudonymiser un élève
+      description: |
+        Remplace les données identifiantes par des valeurs anonymes.
+        Conserve les statistiques et l'historique d'apprentissage.
+        Opération irréversible.
+      operationId: pseudonymizeStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Élève pseudonymisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      uuid_student:
+                        type: string
+                      rgpd_status:
+                        type: string
+                        enum: [pseudonymized]
+                      pseudonymized_at:
+                        type: string
+                        format: date-time
+                      warning:
+                        type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/admin/students/{uuid}:
+    delete:
+      tags:
+        - Admin - Students
+        - RGPD
+      summary: Suppression logique d'un élève
+      description: |
+        Marque l'élève comme supprimé (RGPD).
+        Les données sont conservées mais inaccessibles.
+      operationId: deleteStudent
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Élève supprimé
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================
+  # IA Policy Management
+  # ============================================
+  /api/admin/ia-policy:
+    get:
+      tags:
+        - Admin - IA Policy
+      summary: Récupérer la politique IA du tenant
+      description: |
+        Retourne la configuration IA du tenant:
+        - Kill switch (activé/désactivé)
+        - BYOK (Bring Your Own Key)
+        - Modèles autorisés
+        - Filtrage de contenu
+      operationId: getIAPolicy
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Politique IA
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/IAPolicy'
+
+    put:
+      tags:
+        - Admin - IA Policy
+      summary: Mettre à jour la politique IA
+      description: |
+        Seuls les rôles admin et direction peuvent modifier.
+        Permet d'activer/désactiver l'IA, configurer BYOK, etc.
+      operationId: updateIAPolicy
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ia_enabled:
+                  type: boolean
+                  description: Kill switch - activer/désactiver l'IA
+                ia_disabled_reason:
+                  type: string
+                  description: Raison de la désactivation
+                byok_enabled:
+                  type: boolean
+                  description: Utiliser sa propre clé API
+                api_key:
+                  type: string
+                  description: Clé API (sera chiffrée)
+                api_provider:
+                  type: string
+                  enum: [openai, anthropic, azure]
+                default_model:
+                  type: string
+                  example: gpt-4o-mini
+                allowed_models:
+                  type: array
+                  items:
+                    type: string
+                  example: ["gpt-4o-mini", "gpt-4o", "claude-3-5-sonnet"]
+                content_filter_level:
+                  type: string
+                  enum: [none, low, medium, high]
+                data_retention_days:
+                  type: integer
+                  minimum: 1
+                  maximum: 365
+      responses:
+        '200':
+          description: Politique mise à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/IAPolicy'
+        '403':
+          description: Permission refusée
+
+  # ============================================
+  # IA Budgets Management
+  # ============================================
+  /api/admin/ia-budgets:
+    get:
+      tags:
+        - Admin - IA Budgets
+      summary: Lister les budgets IA
+      description: |
+        Liste tous les budgets (tenant + enseignants).
+        Filtrable par type et utilisateur.
+      operationId: listIABudgets
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [tenant, teacher]
+        - name: user_id
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des budgets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IABudget'
+                  count:
+                    type: integer
+
+    post:
+      tags:
+        - Admin - IA Budgets
+      summary: Créer un budget IA
+      description: |
+        Crée un nouveau budget IA (tenant ou enseignant).
+        Seuls admin et direction peuvent créer des budgets.
+      operationId: createIABudget
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - budget_type
+                - max_tokens
+                - period_start
+                - period_end
+              properties:
+                budget_type:
+                  type: string
+                  enum: [tenant, teacher]
+                user_id:
+                  type: string
+                  description: Requis si budget_type = teacher
+                max_tokens:
+                  type: integer
+                  minimum: 1000
+                max_requests:
+                  type: integer
+                  nullable: true
+                period_start:
+                  type: string
+                  format: date-time
+                period_end:
+                  type: string
+                  format: date-time
+                auto_reset:
+                  type: boolean
+                  default: true
+                alert_threshold_percent:
+                  type: integer
+                  minimum: 1
+                  maximum: 100
+                  default: 80
+      responses:
+        '201':
+          description: Budget créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/IABudget'
+        '409':
+          description: Budget déjà existant pour cette période
+
+  /api/admin/ia-budgets/{id}:
+    get:
+      tags:
+        - Admin - IA Budgets
+      summary: Détails d'un budget
+      operationId: getIABudget
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Détails du budget
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/IABudget'
+
+    put:
+      tags:
+        - Admin - IA Budgets
+      summary: Mettre à jour un budget
+      operationId: updateIABudget
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                max_tokens:
+                  type: integer
+                max_requests:
+                  type: integer
+                alert_threshold_percent:
+                  type: integer
+                status:
+                  type: string
+                  enum: [active, exceeded, expired, suspended]
+                period_end:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Budget mis à jour
+
+  /api/admin/ia-budgets/usage:
+    get:
+      tags:
+        - Admin - IA Budgets
+      summary: Statistiques d'usage des budgets
+      description: |
+        Retourne les statistiques d'usage:
+        - Budget tenant actuel
+        - Résumé des budgets enseignants
+        - Usage récent (30 derniers jours)
+      operationId: getIABudgetsUsage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Statistiques d'usage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      tenant_budget:
+                        $ref: '#/components/schemas/IABudget'
+                      teacher_budgets_summary:
+                        type: object
+                        properties:
+                          total_teachers:
+                            type: integer
+                          total_tokens_used:
+                            type: integer
+                          total_tokens_allocated:
+                            type: integer
+                          budgets_exceeded:
+                            type: integer
+                      recent_usage:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            requests:
+                              type: integer
+                            tokens_used:
+                              type: integer
+
+  # ============================================
+  # IA Audit Log
+  # ============================================
+  /api/admin/ia-audit:
+    get:
+      tags:
+        - Admin - IA Audit
+      summary: Journal d'audit IA
+      description: |
+        Récupère les logs d'audit des interactions IA.
+        Filtrable par utilisateur, modèle, date, etc.
+      operationId: getIAAuditLogs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: X-Orchestrator-Id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user_id
+          in: query
+          schema:
+            type: string
+        - name: model
+          in: query
+          schema:
+            type: string
+        - name: context_type
+          in: query
+          schema:
+            type: string
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [success, error, filtered, budget_exceeded]
+        - name: date_from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: date_to
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+            maximum: 500
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Logs d'audit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/IAAuditLog'
+                  pagination:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      limit:
+                        type: integer
+                      offset:
+                        type: integer
+                      hasMore:
+                        type: boolean
+                  stats:
+                    type: object
+                    properties:
+                      total_requests:
+                        type: integer
+                      total_tokens:
+                        type: integer
+                      avg_latency_ms:
+                        type: number
+                      successful_requests:
+                        type: integer
+                      failed_requests:
+                        type: integer
+                  model_breakdown:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        model_used:
+                          type: string
+                        requests:
+                          type: integer
+                        tokens_used:
+                          type: integer
+
+# ============================================
+# Components
+# ============================================
+components:
+  schemas:
+    StudentWithUUID:
+      type: object
+      properties:
+        id:
+          type: string
+        uuid_student:
+          type: string
+          format: uuid
+          description: UUID pédagogique unique
+        uuid_social:
+          type: string
+          format: uuid
+          description: UUID pour le suivi social anonymisé
+        firstname:
+          type: string
+        lastname:
+          type: string
+        class_id:
+          type: string
+        rgpd_status:
+          type: string
+          enum: [active, pseudonymized, deleted]
+        created_at:
+          type: string
+          format: date-time
+
+    StudentRGPDExport:
+      type: object
+      properties:
+        export_date:
+          type: string
+          format: date-time
+        export_requested_by:
+          type: string
+        student:
+          type: object
+          properties:
+            uuid_student:
+              type: string
+            uuid_social:
+              type: string
+            firstname:
+              type: string
+            lastname:
+              type: string
+            email:
+              type: string
+              nullable: true
+            phone:
+              type: string
+              nullable: true
+            class_name:
+              type: string
+            promo_name:
+              type: string
+            rgpd_status:
+              type: string
+            created_at:
+              type: string
+            rgpd_export_count:
+              type: integer
+        academic_data:
+          type: object
+          properties:
+            missions_completed:
+              type: integer
+            missions:
+              type: array
+              items:
+                type: object
+        social_data:
+          type: object
+        achievements:
+          type: object
+          properties:
+            badges_earned:
+              type: integer
+            badges:
+              type: array
+              items:
+                type: object
+        metadata:
+          type: object
+
+    IAPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        ia_enabled:
+          type: boolean
+          description: Kill switch - IA activée/désactivée
+        ia_disabled_reason:
+          type: string
+          nullable: true
+        ia_disabled_at:
+          type: string
+          format: date-time
+          nullable: true
+        ia_disabled_by:
+          type: string
+          nullable: true
+        byok_enabled:
+          type: boolean
+          description: Bring Your Own Key activé
+        api_provider:
+          type: string
+          nullable: true
+          enum: [openai, anthropic, azure]
+        default_model:
+          type: string
+          example: gpt-4o-mini
+        allowed_models:
+          type: array
+          items:
+            type: string
+        content_filter_level:
+          type: string
+          enum: [none, low, medium, high]
+        data_retention_days:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IABudget:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        budget_type:
+          type: string
+          enum: [tenant, teacher]
+        user_id:
+          type: string
+          nullable: true
+        user_email:
+          type: string
+          nullable: true
+        user_firstname:
+          type: string
+          nullable: true
+        user_lastname:
+          type: string
+          nullable: true
+        max_tokens:
+          type: integer
+        used_tokens:
+          type: integer
+        max_requests:
+          type: integer
+          nullable: true
+        used_requests:
+          type: integer
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        auto_reset:
+          type: boolean
+        alert_threshold_percent:
+          type: integer
+        alert_sent:
+          type: boolean
+        alert_sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [active, exceeded, expired, suspended]
+        usage_percent:
+          type: number
+          description: Pourcentage d'utilisation
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    IAAuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenant_id:
+          type: string
+        user_id:
+          type: string
+        user_email:
+          type: string
+        user_firstname:
+          type: string
+        user_lastname:
+          type: string
+        user_role:
+          type: string
+        prompt_text:
+          type: string
+        prompt_hash:
+          type: string
+        model_used:
+          type: string
+        model_version:
+          type: string
+        api_provider:
+          type: string
+        response_text:
+          type: string
+        response_truncated:
+          type: boolean
+        tokens_prompt:
+          type: integer
+        tokens_completion:
+          type: integer
+        tokens_total:
+          type: integer
+        latency_ms:
+          type: integer
+        context_type:
+          type: string
+        context_id:
+          type: string
+        status:
+          type: string
+          enum: [success, error, filtered, budget_exceeded]
+        error_message:
+          type: string
+          nullable: true
+        content_filtered:
+          type: boolean
+        flagged_reason:
+          type: string
+          nullable: true
+        ip_address:
+          type: string
+        user_agent:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+  responses:
+    ValidationError:
+      description: Erreur de validation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              timestamp:
+                type: string
+
+    NotFound:
+      description: Ressource non trouvée
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              timestamp:
+                type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
