@@ -3,7 +3,6 @@
 > Plateforme institutionnelle qui synchronise **ErgoMate** et les équipes pédagogiques pour piloter, créer et qualifier les contenus d'apprentissage.
 
 - **Version produit** : `Alpha-01`
-- **Périmètre fonctionnel couvert** : Sprints 0 → 17 (dont 10, 12, 14, 15, 16, 17 détaillés ci-dessous)
 - **Dernière mise à jour** : 2025-11-14
 - **Auteur / Mainteneur** : Mehdy Driouech – DAWP Engineering  
 
