@@ -1,0 +1,5 @@
+firstname,lastname,email,role,class_names
+Pierre,Durand,pierre.durand@ecole.fr,teacher,"6emeA,6emeB"
+Sophie,Bernard,sophie.bernard@ecole.fr,direction,
+Marie,Lefebvre,marie.lefebvre@ecole.fr,teacher,6emeA
+Jean,Moreau,jean.moreau@ecole.fr,referent,
