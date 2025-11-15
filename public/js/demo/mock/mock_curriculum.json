@@ -1,0 +1,85 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": "curr-001-math-6eme",
+      "title": "Mathématiques 6ème - Programme 2024",
+      "description": "Programme complet de mathématiques pour la classe de 6ème selon le nouveau référentiel 2024",
+      "grade_level": "6ème",
+      "subject": "Mathématiques",
+      "total_sequences": 12,
+      "total_hours": 108,
+      "status": "published",
+      "created_at": "2024-09-01T08:00:00Z",
+      "updated_at": "2024-11-10T14:30:00Z",
+      "created_by": {
+        "id": "teacher-001",
+        "name": "Marie Dupont"
+      },
+      "tags": ["collège", "cycle 3", "mathématiques"],
+      "completion_rate": 45,
+      "students_enrolled": 87
+    },
+    {
+      "id": "curr-002-francais-5eme",
+      "title": "Français 5ème - Littérature & Grammaire",
+      "description": "Parcours complet de français pour la 5ème : étude de textes littéraires, grammaire, conjugaison et expression écrite",
+      "grade_level": "5ème",
+      "subject": "Français",
+      "total_sequences": 15,
+      "total_hours": 126,
+      "status": "published",
+      "created_at": "2024-08-28T10:15:00Z",
+      "updated_at": "2024-11-12T09:20:00Z",
+      "created_by": {
+        "id": "teacher-002",
+        "name": "Jean Martin"
+      },
+      "tags": ["collège", "cycle 4", "français", "littérature"],
+      "completion_rate": 62,
+      "students_enrolled": 102
+    },
+    {
+      "id": "curr-003-svt-4eme",
+      "title": "SVT 4ème - Corps humain et Santé",
+      "description": "Programme de Sciences de la Vie et de la Terre axé sur le corps humain, la nutrition, la reproduction",
+      "grade_level": "4ème",
+      "subject": "SVT",
+      "total_sequences": 10,
+      "total_hours": 72,
+      "status": "draft",
+      "created_at": "2024-11-01T14:00:00Z",
+      "updated_at": "2024-11-14T16:45:00Z",
+      "created_by": {
+        "id": "teacher-003",
+        "name": "Sophie Bernard"
+      },
+      "tags": ["collège", "cycle 4", "sciences", "svt"],
+      "completion_rate": 12,
+      "students_enrolled": 34
+    },
+    {
+      "id": "curr-004-histoire-3eme",
+      "title": "Histoire 3ème - XXe siècle",
+      "description": "Histoire contemporaine : les deux guerres mondiales, la guerre froide, construction européenne",
+      "grade_level": "3ème",
+      "subject": "Histoire",
+      "total_sequences": 8,
+      "total_hours": 60,
+      "status": "published",
+      "created_at": "2024-09-05T11:30:00Z",
+      "updated_at": "2024-11-08T13:15:00Z",
+      "created_by": {
+        "id": "teacher-004",
+        "name": "Luc Petit"
+      },
+      "tags": ["collège", "cycle 4", "histoire"],
+      "completion_rate": 78,
+      "students_enrolled": 95
+    }
+  ],
+  "meta": {
+    "total": 4,
+    "demo_mode": true
+  }
+}

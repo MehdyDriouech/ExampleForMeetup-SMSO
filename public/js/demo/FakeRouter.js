@@ -1,6 +1,7 @@
 /**
- * FakeRouter.js - Sprint 17
+ * FakeRouter.js - Sprint 20B - Mode Démo Global
  * Intercepte les appels API et retourne des données mock en mode démo
+ * Support complet S18 (Curriculum Builder) + S19 (Workflow Multi-acteurs) + S20 (Tenant Onboarding)
  */
 
 class FakeRouter {
@@ -9,6 +10,7 @@ class FakeRouter {
         this.requestLog = [];
         this.enabled = false;
         this.basePath = '/js/demo/mock';
+        this.debugMode = true; // Active les logs détaillés
     }
 
     /**
@@ -204,12 +206,91 @@ class FakeRouter {
                 return this.loadMockFile('telemetry.json');
             }
 
-            // Réponse par défaut pour les endpoints non gérés
-            return this.createResponse({
-                success: true,
-                message: `Mock response for ${endpoint}`,
-                data: []
-            });
+            // ========================================
+            // SPRINT 18 - CURRICULUM BUILDER
+            // ========================================
+            if (endpoint === '/api/curriculum' && method === 'GET') {
+                return this.loadMockFile('mock_curriculum.json');
+            }
+
+            if (endpoint.match(/^\/api\/curriculum\/[0-9a-f-]+$/) && method === 'GET') {
+                return this.loadMockFile('mock_curriculum_sequences.json');
+            }
+
+            if (endpoint.match(/^\/api\/curriculum\/student\/[0-9a-f-]+$/) && method === 'GET') {
+                return this.loadMockFile('mock_student_path.json');
+            }
+
+            if (endpoint === '/api/curriculum' && method === 'POST') {
+                this.logDebug('Creating new curriculum (mock)', options.body);
+                return this.createMutationResponse('Curriculum créé avec succès');
+            }
+
+            if (endpoint.match(/^\/api\/curriculum\/sequence\/[0-9a-f-]+\/link-assignment$/) && method === 'PATCH') {
+                this.logDebug('Linking assignment to sequence (mock)', options.body);
+                return this.createMutationResponse('Affectation liée à la séquence');
+            }
+
+            // ========================================
+            // SPRINT 19 - WORKFLOW MULTI-ACTEURS
+            // ========================================
+            if (endpoint.match(/^\/api\/themes\/[0-9a-f-]+\/status$/) && method === 'PATCH') {
+                this.logDebug('Updating theme status (mock)', options.body);
+                return this.createMutationResponse('Statut du thème mis à jour');
+            }
+
+            if (endpoint.match(/^\/api\/annotations\/[0-9a-f-]+$/) && method === 'GET') {
+                return this.loadMockFile('mock_annotations.json');
+            }
+
+            if (endpoint === '/api/annotations' && method === 'POST') {
+                this.logDebug('Creating annotation (mock)', options.body);
+                return this.createMutationResponse('Annotation créée', {
+                    id: this.generateUUID(),
+                    created_at: new Date().toISOString()
+                });
+            }
+
+            if (endpoint.match(/^\/api\/themes\/[0-9a-f-]+\/versions$/) && method === 'GET') {
+                return this.loadMockFile('mock_theme_versions.json');
+            }
+
+            if (endpoint.match(/^\/api\/themes\/[0-9a-f-]+\/version\/rollback$/) && method === 'POST') {
+                this.logDebug('Rolling back theme version (mock)', options.body);
+                return this.createMutationResponse('Version restaurée avec succès');
+            }
+
+            // ========================================
+            // SPRINT 20 - TENANT ONBOARDING
+            // ========================================
+            if (endpoint === '/api/admin/tenant/create' && method === 'POST') {
+                this.logDebug('Creating tenant (mock)', options.body);
+                return this.createMutationResponse('Tenant créé avec succès', {
+                    tenant_id: 'tenant_' + Date.now(),
+                    created_at: new Date().toISOString()
+                });
+            }
+
+            if (endpoint.match(/^\/api\/admin\/tenant\/[0-9a-zA-Z_-]+\/config$/) && method === 'PATCH') {
+                this.logDebug('Updating tenant config (mock)', options.body);
+                return this.createMutationResponse('Configuration tenant mise à jour');
+            }
+
+            if (endpoint === '/api/admin/tenant/import-preview' && method === 'POST') {
+                this.logDebug('Previewing import (mock)', options.body);
+                return this.loadMockFile('mock_import_preview.json');
+            }
+
+            if (endpoint === '/api/admin/tenant/import-apply' && method === 'POST') {
+                this.logDebug('Applying import (mock)', options.body);
+                return this.loadMockFile('mock_import_apply.json');
+            }
+
+            // ========================================
+            // FALLBACK UNIVERSEL
+            // ========================================
+            this.logDebug(`⚠️ Endpoint non mocké: ${method} ${endpoint}`, 'Fallback utilisé');
+            return this.createFallbackResponse(endpoint, method);
 
         } catch (error) {
             console.error('[FakeRouter] Erreur:', error);
@@ -310,6 +391,70 @@ class FakeRouter {
      */
     clearLog() {
         this.requestLog = [];
+    }
+
+    /**
+     * Log en mode debug
+     */
+    logDebug(message, details = null) {
+        if (this.debugMode) {
+            console.log(`[FakeRouter DEBUG] ${message}`, details || '');
+        }
+    }
+
+    /**
+     * Crée une réponse pour une mutation (POST/PATCH/DELETE)
+     */
+    createMutationResponse(message, additionalData = {}) {
+        return this.createResponse({
+            success: true,
+            message: message,
+            data: {
+                demo_mode: true,
+                ...additionalData
+            }
+        });
+    }
+
+    /**
+     * Crée une réponse fallback pour les endpoints non mockés
+     */
+    createFallbackResponse(endpoint, method) {
+        // Pour les mutations, retourner un succès générique
+        if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(method)) {
+            return this.createMutationResponse('Opération effectuée (mode démo)', {
+                endpoint: endpoint,
+                fallback: true
+            });
+        }
+
+        // Pour les GET, retourner une structure générique
+        return this.createResponse({
+            success: true,
+            data: [],
+            message: `Mock data for ${endpoint}`,
+            demo_mode: true,
+            fallback: true
+        });
+    }
+
+    /**
+     * Génère un UUID v4
+     */
+    generateUUID() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            const r = Math.random() * 16 | 0;
+            const v = c === 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    /**
+     * Active/désactive le mode debug
+     */
+    setDebugMode(enabled) {
+        this.debugMode = enabled;
+        console.log(`[FakeRouter] Mode debug ${enabled ? 'activé' : 'désactivé'}`);
     }
 }
 

@@ -1,0 +1,649 @@
+openapi: 3.1.0
+info:
+  title: Sprint 20B - Mode Démo Global
+  version: 2.0.0
+  description: |
+    Extension du mode démo pour support complet des Sprints 18, 19 et 20.
+
+    **Mode Démo** : Intercepte les appels API via FakeRouter.js et retourne des données mock.
+    **Activation** : localStorage.setItem('DEMO_SESSION', 'true')
+    **Sprints supportés** :
+    - Sprint 18 : Curriculum Builder
+    - Sprint 19 : Workflow Multi-acteurs
+    - Sprint 20 : Tenant Onboarding
+
+    Tous les endpoints retournent des données fictives réalistes pour démonstration.
+
+servers:
+  - url: /api
+    description: Mock API (intercepté par FakeRouter.js)
+
+tags:
+  - name: Curriculum
+    description: 'Sprint 18: Curriculum Builder - Gestion des parcours pédagogiques'
+  - name: Workflow
+    description: 'Sprint 19: Workflow Multi-acteurs - Validation collaborative et annotations'
+  - name: TenantOnboarding
+    description: 'Sprint 20: Tenant Onboarding - Création et configuration d\'établissements'
+
+paths:
+  # ========================================
+  # SPRINT 18 - CURRICULUM BUILDER
+  # ========================================
+  /curriculum:
+    get:
+      tags:
+        - Curriculum
+      summary: Liste des curriculums
+      description: Retourne la liste de tous les programmes/curriculums créés
+      operationId: listCurriculums
+      responses:
+        '200':
+          description: Liste des curriculums
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Curriculum'
+                  meta:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      demo_mode:
+                        type: boolean
+
+    post:
+      tags:
+        - Curriculum
+      summary: Créer un curriculum
+      description: Crée un nouveau curriculum (mode démo - retourne un succès mocké)
+      operationId: createCurriculum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                grade_level:
+                  type: string
+                subject:
+                  type: string
+      responses:
+        '200':
+          description: Curriculum créé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  /curriculum/{id}:
+    get:
+      tags:
+        - Curriculum
+      summary: Détails d'un curriculum avec séquences
+      description: Retourne les détails et séquences d'un curriculum spécifique
+      operationId: getCurriculumById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Détails du curriculum
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CurriculumDetails'
+
+  /curriculum/student/{uuid}:
+    get:
+      tags:
+        - Curriculum
+      summary: Parcours personnalisé d'un élève
+      description: Retourne le parcours d'apprentissage d'un élève dans un curriculum
+      operationId: getStudentPath
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Parcours de l'élève
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/StudentPath'
+
+  /curriculum/sequence/{id}/link-assignment:
+    patch:
+      tags:
+        - Curriculum
+      summary: Lier une affectation à une séquence
+      description: Associe une activité (quiz/flashcard) à une séquence du curriculum
+      operationId: linkAssignmentToSequence
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assignment_id:
+                  type: string
+      responses:
+        '200':
+          description: Affectation liée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  # ========================================
+  # SPRINT 19 - WORKFLOW MULTI-ACTEURS
+  # ========================================
+  /themes/{id}/status:
+    patch:
+      tags:
+        - Workflow
+      summary: Mettre à jour le statut d'un thème
+      description: Change le statut d'un thème (draft, review, approved, published)
+      operationId: updateThemeStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [draft, review, approved, published, rejected]
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Statut mis à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  /annotations/{theme_id}:
+    get:
+      tags:
+        - Workflow
+      summary: Liste des annotations d'un thème
+      description: Retourne toutes les annotations et commentaires d'un thème
+      operationId: getAnnotations
+      parameters:
+        - name: theme_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Annotations du thème
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/AnnotationsResponse'
+
+  /annotations:
+    post:
+      tags:
+        - Workflow
+      summary: Créer une annotation
+      description: Ajoute une nouvelle annotation à un thème
+      operationId: createAnnotation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                theme_id:
+                  type: string
+                type:
+                  type: string
+                  enum: [pedagogical_comment, quality_issue, suggestion, positive_feedback, accessibility_issue]
+                content:
+                  type: string
+                priority:
+                  type: string
+                  enum: [low, medium, high]
+      responses:
+        '200':
+          description: Annotation créée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  /themes/{id}/versions:
+    get:
+      tags:
+        - Workflow
+      summary: Historique des versions d'un thème
+      description: Retourne toutes les versions d'un thème avec détails des modifications
+      operationId: getThemeVersions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Versions du thème
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ThemeVersionsResponse'
+
+  /themes/{id}/version/rollback:
+    post:
+      tags:
+        - Workflow
+      summary: Restaurer une version antérieure
+      description: Rollback vers une version précédente du thème
+      operationId: rollbackThemeVersion
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: string
+      responses:
+        '200':
+          description: Version restaurée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  # ========================================
+  # SPRINT 20 - TENANT ONBOARDING
+  # ========================================
+  /admin/tenant/create:
+    post:
+      tags:
+        - TenantOnboarding
+      summary: Créer un nouveau tenant
+      description: Initialise un nouvel établissement dans le système
+      operationId: createTenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tenant_name:
+                  type: string
+                tenant_type:
+                  type: string
+                  enum: [college, lycee, university]
+                admin_email:
+                  type: string
+      responses:
+        '200':
+          description: Tenant créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      tenant_id:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+
+  /admin/tenant/{id}/config:
+    patch:
+      tags:
+        - TenantOnboarding
+      summary: Mettre à jour la configuration d'un tenant
+      description: Modifie les paramètres de configuration d'un établissement
+      operationId: updateTenantConfig
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                configuration:
+                  type: object
+      responses:
+        '200':
+          description: Configuration mise à jour
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResponse'
+
+  /admin/tenant/import-preview:
+    post:
+      tags:
+        - TenantOnboarding
+      summary: Prévisualiser une importation CSV
+      description: Analyse et valide un fichier CSV avant importation
+      operationId: previewImport
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                import_type:
+                  type: string
+                  enum: [students, teachers, classes]
+      responses:
+        '200':
+          description: Prévisualisation de l'import
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ImportPreview'
+
+  /admin/tenant/import-apply:
+    post:
+      tags:
+        - TenantOnboarding
+      summary: Appliquer une importation CSV
+      description: Importe les données validées dans le système
+      operationId: applyImport
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                import_id:
+                  type: string
+      responses:
+        '200':
+          description: Import effectué
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/ImportResult'
+
+components:
+  schemas:
+    Curriculum:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        grade_level:
+          type: string
+        subject:
+          type: string
+        total_sequences:
+          type: integer
+        total_hours:
+          type: integer
+        status:
+          type: string
+          enum: [draft, published, archived]
+        completion_rate:
+          type: number
+        students_enrolled:
+          type: integer
+
+    CurriculumDetails:
+      type: object
+      properties:
+        curriculum_id:
+          type: string
+        curriculum_title:
+          type: string
+        sequences:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sequence'
+
+    Sequence:
+      type: object
+      properties:
+        id:
+          type: string
+        order:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        duration_hours:
+          type: integer
+        objectives:
+          type: array
+          items:
+            type: string
+        assignments_linked:
+          type: array
+          items:
+            type: object
+        completion_rate:
+          type: number
+        status:
+          type: string
+
+    StudentPath:
+      type: object
+      properties:
+        student_id:
+          type: string
+        student_name:
+          type: string
+        curriculum_id:
+          type: string
+        overall_progress:
+          type: number
+        overall_mastery:
+          type: number
+        path:
+          type: array
+          items:
+            type: object
+
+    ThemeVersionsResponse:
+      type: object
+      properties:
+        theme_id:
+          type: string
+        theme_title:
+          type: string
+        current_version:
+          type: string
+        versions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ThemeVersion'
+
+    ThemeVersion:
+      type: object
+      properties:
+        version:
+          type: string
+        version_number:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        created_by:
+          type: object
+        status:
+          type: string
+        is_current:
+          type: boolean
+        change_summary:
+          type: string
+
+    AnnotationsResponse:
+      type: object
+      properties:
+        theme_id:
+          type: string
+        theme_title:
+          type: string
+        annotations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Annotation'
+
+    Annotation:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        author:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+        content:
+          type: string
+        priority:
+          type: string
+        resolved:
+          type: boolean
+
+    ImportPreview:
+      type: object
+      properties:
+        import_id:
+          type: string
+        file_name:
+          type: string
+        total_rows:
+          type: integer
+        valid_rows:
+          type: integer
+        invalid_rows:
+          type: integer
+        can_import:
+          type: boolean
+
+    ImportResult:
+      type: object
+      properties:
+        import_id:
+          type: string
+        status:
+          type: string
+        total_rows_processed:
+          type: integer
+        successful_imports:
+          type: integer
+        failed_imports:
+          type: integer
+
+    MutationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            demo_mode:
+              type: boolean

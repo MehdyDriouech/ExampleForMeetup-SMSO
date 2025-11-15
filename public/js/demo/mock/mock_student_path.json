@@ -1,0 +1,146 @@
+{
+  "success": true,
+  "data": {
+    "student_id": "student-uuid-12345",
+    "student_name": "Emma Rousseau",
+    "grade": "6ème",
+    "class": "6ème B",
+    "curriculum_id": "curr-001-math-6eme",
+    "curriculum_title": "Mathématiques 6ème - Programme 2024",
+    "overall_progress": 62,
+    "overall_mastery": 74,
+    "started_at": "2024-09-15T08:00:00Z",
+    "last_activity": "2024-11-14T16:30:00Z",
+    "path": [
+      {
+        "sequence_id": "seq-001",
+        "sequence_title": "Les nombres entiers et décimaux",
+        "status": "completed",
+        "progress": 100,
+        "mastery_score": 82,
+        "started_at": "2024-09-15T08:00:00Z",
+        "completed_at": "2024-09-28T14:20:00Z",
+        "time_spent_minutes": 245,
+        "activities": [
+          {
+            "id": "assign-101",
+            "title": "Quiz - Nombres entiers",
+            "type": "quiz",
+            "status": "completed",
+            "score": 85,
+            "attempts": 2,
+            "last_attempt": "2024-09-22T10:15:00Z"
+          },
+          {
+            "id": "assign-102",
+            "title": "Flashcards - Opérations",
+            "type": "flashcard",
+            "status": "completed",
+            "score": 78,
+            "attempts": 3,
+            "last_attempt": "2024-09-27T14:30:00Z"
+          }
+        ],
+        "feedback": "Très bon travail ! Emma maîtrise bien les opérations sur les nombres entiers.",
+        "teacher_notes": "Élève appliquée et rigoureuse"
+      },
+      {
+        "sequence_id": "seq-002",
+        "sequence_title": "Les fractions",
+        "status": "in_progress",
+        "progress": 68,
+        "mastery_score": 70,
+        "started_at": "2024-10-01T08:00:00Z",
+        "completed_at": null,
+        "time_spent_minutes": 189,
+        "activities": [
+          {
+            "id": "assign-103",
+            "title": "Quiz - Fractions équivalentes",
+            "type": "quiz",
+            "status": "completed",
+            "score": 70,
+            "attempts": 1,
+            "last_attempt": "2024-10-15T11:00:00Z"
+          }
+        ],
+        "feedback": "Les fractions équivalentes sont comprises, mais il faut encore travailler la comparaison.",
+        "teacher_notes": "Proposer des exercices supplémentaires sur la comparaison"
+      },
+      {
+        "sequence_id": "seq-003",
+        "sequence_title": "Géométrie plane - Les figures",
+        "status": "locked",
+        "progress": 0,
+        "mastery_score": null,
+        "started_at": null,
+        "completed_at": null,
+        "time_spent_minutes": 0,
+        "activities": [],
+        "feedback": null,
+        "teacher_notes": null,
+        "unlock_condition": "Compléter la séquence 'Les fractions' avec au moins 75% de maîtrise"
+      },
+      {
+        "sequence_id": "seq-004",
+        "sequence_title": "La proportionnalité",
+        "status": "locked",
+        "progress": 0,
+        "mastery_score": null,
+        "started_at": null,
+        "completed_at": null,
+        "time_spent_minutes": 0,
+        "activities": [],
+        "feedback": null,
+        "teacher_notes": null,
+        "unlock_condition": "Compléter la séquence 'Géométrie plane'"
+      },
+      {
+        "sequence_id": "seq-005",
+        "sequence_title": "Organisation et gestion de données",
+        "status": "locked",
+        "progress": 0,
+        "mastery_score": null,
+        "started_at": null,
+        "completed_at": null,
+        "time_spent_minutes": 0,
+        "activities": [],
+        "feedback": null,
+        "teacher_notes": null,
+        "unlock_condition": "Compléter la séquence 'La proportionnalité'"
+      }
+    ],
+    "recommendations": [
+      {
+        "type": "review",
+        "title": "Revoir les fractions : comparaison et simplification",
+        "priority": "high",
+        "reason": "Le score de maîtrise est juste en dessous du seuil de validation (75%)"
+      },
+      {
+        "type": "practice",
+        "title": "S'entraîner avec des exercices supplémentaires sur les fractions",
+        "priority": "medium",
+        "reason": "Consolider les acquis avant de passer à la géométrie"
+      }
+    ],
+    "achievements": [
+      {
+        "id": "badge-001",
+        "title": "Expert en nombres entiers",
+        "icon": "🏆",
+        "unlocked_at": "2024-09-28T14:20:00Z"
+      },
+      {
+        "id": "badge-002",
+        "title": "100% de complétion - Séquence 1",
+        "icon": "⭐",
+        "unlocked_at": "2024-09-28T14:20:00Z"
+      }
+    ]
+  },
+  "meta": {
+    "demo_mode": true,
+    "generated_at": "2025-11-14T17:30:00Z"
+  }
+}

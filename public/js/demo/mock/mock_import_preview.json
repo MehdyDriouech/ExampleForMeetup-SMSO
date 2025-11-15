@@ -1,0 +1,189 @@
+{
+  "success": true,
+  "data": {
+    "import_id": "import-preview-20241114-173000",
+    "file_name": "eleves_6eme_2024.csv",
+    "file_size": 15624,
+    "uploaded_at": "2024-11-14T17:30:00Z",
+    "import_type": "students",
+    "status": "preview",
+    "preview": {
+      "total_rows": 28,
+      "valid_rows": 26,
+      "invalid_rows": 2,
+      "duplicate_rows": 1,
+      "columns_detected": [
+        "nom",
+        "prenom",
+        "date_naissance",
+        "classe",
+        "email",
+        "responsable_nom",
+        "responsable_email",
+        "responsable_telephone"
+      ],
+      "mapping_suggestions": {
+        "nom": "last_name",
+        "prenom": "first_name",
+        "date_naissance": "birth_date",
+        "classe": "class_name",
+        "email": "email",
+        "responsable_nom": "parent_name",
+        "responsable_email": "parent_email",
+        "responsable_telephone": "parent_phone"
+      },
+      "sample_data": [
+        {
+          "row_number": 1,
+          "status": "valid",
+          "data": {
+            "nom": "Rousseau",
+            "prenom": "Emma",
+            "date_naissance": "2012-03-15",
+            "classe": "6ème B",
+            "email": "emma.rousseau@college-jeanmoulin.fr",
+            "responsable_nom": "Rousseau Catherine",
+            "responsable_email": "c.rousseau@gmail.com",
+            "responsable_telephone": "06 12 34 56 78"
+          },
+          "warnings": []
+        },
+        {
+          "row_number": 2,
+          "status": "valid",
+          "data": {
+            "nom": "Martin",
+            "prenom": "Lucas",
+            "date_naissance": "2012-07-22",
+            "classe": "6ème B",
+            "email": "lucas.martin@college-jeanmoulin.fr",
+            "responsable_nom": "Martin Sophie",
+            "responsable_email": "sophie.martin@outlook.fr",
+            "responsable_telephone": "06 23 45 67 89"
+          },
+          "warnings": []
+        },
+        {
+          "row_number": 3,
+          "status": "valid",
+          "data": {
+            "nom": "Dubois",
+            "prenom": "Léa",
+            "date_naissance": "2012-11-08",
+            "classe": "6ème A",
+            "email": "lea.dubois@college-jeanmoulin.fr",
+            "responsable_nom": "Dubois Pierre",
+            "responsable_email": "p.dubois@yahoo.fr",
+            "responsable_telephone": "06 34 56 78 90"
+          },
+          "warnings": []
+        },
+        {
+          "row_number": 4,
+          "status": "invalid",
+          "data": {
+            "nom": "Petit",
+            "prenom": "Thomas",
+            "date_naissance": "15/02/2012",
+            "classe": "6ème C",
+            "email": "thomas.petit-invalid-email",
+            "responsable_nom": "Petit Marie",
+            "responsable_email": "marie.petit@gmail.com",
+            "responsable_telephone": "06 45 67 89 01"
+          },
+          "warnings": [],
+          "errors": [
+            {
+              "field": "date_naissance",
+              "error": "Format de date invalide. Attendu: YYYY-MM-DD"
+            },
+            {
+              "field": "email",
+              "error": "Format d'email invalide"
+            }
+          ]
+        },
+        {
+          "row_number": 5,
+          "status": "duplicate",
+          "data": {
+            "nom": "Rousseau",
+            "prenom": "Emma",
+            "date_naissance": "2012-03-15",
+            "classe": "6ème B",
+            "email": "emma.rousseau@college-jeanmoulin.fr",
+            "responsable_nom": "Rousseau Catherine",
+            "responsable_email": "c.rousseau@gmail.com",
+            "responsable_telephone": "06 12 34 56 78"
+          },
+          "warnings": [
+            {
+              "type": "duplicate",
+              "message": "Cet élève semble déjà présent dans le système (même nom, prénom et date de naissance)"
+            }
+          ]
+        }
+      ],
+      "validation_summary": {
+        "errors": [
+          {
+            "type": "invalid_date_format",
+            "count": 1,
+            "rows": [4],
+            "message": "Format de date invalide"
+          },
+          {
+            "type": "invalid_email",
+            "count": 1,
+            "rows": [4],
+            "message": "Format d'email invalide"
+          }
+        ],
+        "warnings": [
+          {
+            "type": "duplicate_entry",
+            "count": 1,
+            "rows": [5],
+            "message": "Entrées potentiellement dupliquées"
+          },
+          {
+            "type": "missing_phone",
+            "count": 3,
+            "rows": [12, 18, 22],
+            "message": "Numéro de téléphone manquant (optionnel)"
+          }
+        ]
+      },
+      "class_distribution": {
+        "6ème A": 8,
+        "6ème B": 10,
+        "6ème C": 7,
+        "6ème D": 3
+      }
+    },
+    "recommended_actions": [
+      {
+        "type": "fix_errors",
+        "priority": "high",
+        "message": "Corriger les 2 lignes avec des erreurs avant d'importer"
+      },
+      {
+        "type": "check_duplicates",
+        "priority": "medium",
+        "message": "Vérifier les doublons potentiels (1 élève)"
+      },
+      {
+        "type": "review_mapping",
+        "priority": "low",
+        "message": "Vérifier que le mapping des colonnes est correct"
+      }
+    ],
+    "can_import": false,
+    "import_restrictions": [
+      "Vous devez corriger les erreurs avant de pouvoir importer"
+    ]
+  },
+  "meta": {
+    "demo_mode": true
+  }
+}

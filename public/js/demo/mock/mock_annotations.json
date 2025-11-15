@@ -1,0 +1,220 @@
+{
+  "success": true,
+  "data": {
+    "theme_id": "theme-math-pythagore",
+    "theme_title": "Le théorème de Pythagore",
+    "annotations": [
+      {
+        "id": "annot-001",
+        "type": "pedagogical_comment",
+        "author": {
+          "id": "teacher-002",
+          "name": "Jean Martin",
+          "role": "Coordinateur pédagogique",
+          "avatar": null
+        },
+        "created_at": "2024-11-09T14:30:00Z",
+        "updated_at": "2024-11-09T14:30:00Z",
+        "status": "active",
+        "priority": "high",
+        "target": {
+          "section": "introduction",
+          "line": null
+        },
+        "content": "L'introduction historique est très intéressante mais pourrait être simplifiée pour des élèves de 4ème. Je suggère de raccourcir la partie sur Pythagore lui-même et de mettre l'accent sur l'utilité concrète du théorème.",
+        "tags": ["amélioration", "clarté", "niveau"],
+        "resolved": true,
+        "resolved_at": "2024-11-10T09:00:00Z",
+        "resolved_by": {
+          "id": "teacher-001",
+          "name": "Marie Dupont"
+        },
+        "resolution_comment": "Merci Jean ! J'ai raccourci la partie historique et ajouté des exemples d'application concrète (calcul de diagonales, distances, etc.)",
+        "replies": [
+          {
+            "id": "reply-001",
+            "author": {
+              "id": "teacher-001",
+              "name": "Marie Dupont"
+            },
+            "created_at": "2024-11-09T16:00:00Z",
+            "content": "Bonne idée ! Je vais retravailler cette section ce week-end."
+          }
+        ]
+      },
+      {
+        "id": "annot-002",
+        "type": "quality_issue",
+        "author": {
+          "id": "teacher-003",
+          "name": "Sophie Bernard",
+          "role": "Validateur qualité",
+          "avatar": null
+        },
+        "created_at": "2024-11-08T10:15:00Z",
+        "updated_at": "2024-11-08T10:15:00Z",
+        "status": "active",
+        "priority": "medium",
+        "target": {
+          "section": "exercices",
+          "line": "exercice-5"
+        },
+        "content": "L'exercice 5 contient une petite erreur dans l'énoncé : il est indiqué 'triangle ABC rectangle en B' mais le schéma montre un triangle rectangle en A. À corriger pour éviter la confusion.",
+        "tags": ["erreur", "schéma", "urgent"],
+        "resolved": true,
+        "resolved_at": "2024-11-10T14:00:00Z",
+        "resolved_by": {
+          "id": "teacher-001",
+          "name": "Marie Dupont"
+        },
+        "resolution_comment": "Erreur corrigée ! J'ai mis à jour le schéma pour qu'il corresponde à l'énoncé.",
+        "replies": []
+      },
+      {
+        "id": "annot-003",
+        "type": "suggestion",
+        "author": {
+          "id": "teacher-004",
+          "name": "Luc Petit",
+          "role": "Enseignant",
+          "avatar": null
+        },
+        "created_at": "2024-11-07T09:30:00Z",
+        "updated_at": "2024-11-07T09:30:00Z",
+        "status": "active",
+        "priority": "low",
+        "target": {
+          "section": "démonstration",
+          "line": null
+        },
+        "content": "Il serait intéressant d'ajouter une animation interactive pour la démonstration visuelle du théorème. J'ai vu des ressources libres qui montrent le réarrangement des carrés, c'est très parlant pour les élèves.",
+        "tags": ["amélioration", "multimédia", "pédagogie"],
+        "resolved": false,
+        "resolved_at": null,
+        "resolved_by": null,
+        "resolution_comment": null,
+        "replies": [
+          {
+            "id": "reply-002",
+            "author": {
+              "id": "teacher-001",
+              "name": "Marie Dupont"
+            },
+            "created_at": "2024-11-07T14:00:00Z",
+            "content": "Excellente idée Luc ! Tu peux me partager les liens ? Je vais regarder ça."
+          },
+          {
+            "id": "reply-003",
+            "author": {
+              "id": "teacher-004",
+              "name": "Luc Petit"
+            },
+            "created_at": "2024-11-07T15:20:00Z",
+            "content": "Je t'envoie ça par email avec quelques exemples de démos interactives."
+          }
+        ]
+      },
+      {
+        "id": "annot-004",
+        "type": "positive_feedback",
+        "author": {
+          "id": "teacher-003",
+          "name": "Sophie Bernard",
+          "role": "Validateur qualité",
+          "avatar": null
+        },
+        "created_at": "2024-11-10T11:45:00Z",
+        "updated_at": "2024-11-10T11:45:00Z",
+        "status": "active",
+        "priority": "low",
+        "target": {
+          "section": "global",
+          "line": null
+        },
+        "content": "Bravo Marie pour cette nouvelle version ! La progression pédagogique est excellente, les exercices sont bien gradués et les explications sont claires. C'est un très bon thème qui va aider nos élèves.",
+        "tags": ["félicitations", "qualité"],
+        "resolved": false,
+        "resolved_at": null,
+        "resolved_by": null,
+        "resolution_comment": null,
+        "replies": [
+          {
+            "id": "reply-004",
+            "author": {
+              "id": "teacher-001",
+              "name": "Marie Dupont"
+            },
+            "created_at": "2024-11-10T13:00:00Z",
+            "content": "Merci Sophie ! Vos retours m'ont vraiment aidée à améliorer le contenu."
+          }
+        ]
+      },
+      {
+        "id": "annot-005",
+        "type": "accessibility_issue",
+        "author": {
+          "id": "teacher-005",
+          "name": "Claire Dubois",
+          "role": "Référente accessibilité",
+          "avatar": null
+        },
+        "created_at": "2024-11-06T16:00:00Z",
+        "updated_at": "2024-11-06T16:00:00Z",
+        "status": "active",
+        "priority": "medium",
+        "target": {
+          "section": "schémas",
+          "line": null
+        },
+        "content": "Les schémas ne contiennent pas de texte alternatif pour les élèves en situation de handicap visuel. Il faudrait ajouter des descriptions détaillées pour chaque figure géométrique.",
+        "tags": ["accessibilité", "RGAA", "prioritaire"],
+        "resolved": false,
+        "resolved_at": null,
+        "resolved_by": null,
+        "resolution_comment": null,
+        "replies": [
+          {
+            "id": "reply-005",
+            "author": {
+              "id": "teacher-001",
+              "name": "Marie Dupont"
+            },
+            "created_at": "2024-11-07T08:30:00Z",
+            "content": "Tu as raison Claire, je n'y avais pas pensé. Je vais ajouter des descriptions textuelles pour tous les schémas. Peux-tu me guider sur le niveau de détail attendu ?"
+          },
+          {
+            "id": "reply-006",
+            "author": {
+              "id": "teacher-005",
+              "name": "Claire Dubois"
+            },
+            "created_at": "2024-11-07T10:00:00Z",
+            "content": "Bien sûr ! Je te prépare un document avec des exemples de descriptions et je passe te voir demain pour qu'on regarde ça ensemble."
+          }
+        ]
+      }
+    ]
+  },
+  "meta": {
+    "total_annotations": 5,
+    "by_status": {
+      "active": 5,
+      "archived": 0
+    },
+    "by_type": {
+      "pedagogical_comment": 1,
+      "quality_issue": 1,
+      "suggestion": 1,
+      "positive_feedback": 1,
+      "accessibility_issue": 1
+    },
+    "by_priority": {
+      "high": 1,
+      "medium": 2,
+      "low": 2
+    },
+    "resolved_count": 2,
+    "unresolved_count": 3,
+    "demo_mode": true
+  }
+}

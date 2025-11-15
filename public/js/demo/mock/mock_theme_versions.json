@@ -1,0 +1,149 @@
+{
+  "success": true,
+  "data": {
+    "theme_id": "theme-math-pythagore",
+    "theme_title": "Le théorème de Pythagore",
+    "current_version": "v3",
+    "versions": [
+      {
+        "version": "v3",
+        "version_number": 3,
+        "created_at": "2024-11-10T14:30:00Z",
+        "created_by": {
+          "id": "teacher-001",
+          "name": "Marie Dupont",
+          "role": "Enseignant"
+        },
+        "status": "published",
+        "is_current": true,
+        "change_summary": "Ajout de 5 nouveaux exercices d'application et amélioration des explications",
+        "changes": [
+          {
+            "type": "content_added",
+            "description": "Ajout de 5 exercices progressifs d'application du théorème"
+          },
+          {
+            "type": "content_modified",
+            "description": "Réécriture de la section 'Introduction historique' pour plus de clarté"
+          },
+          {
+            "type": "media_added",
+            "description": "Ajout de 3 schémas animés pour illustrer la démonstration"
+          }
+        ],
+        "validation": {
+          "pedagogical_review": {
+            "status": "approved",
+            "reviewer": "Sophie Bernard",
+            "reviewed_at": "2024-11-10T10:00:00Z",
+            "score": 9.2,
+            "comments": "Excellente amélioration, les exercices sont bien gradués"
+          },
+          "quality_review": {
+            "status": "approved",
+            "reviewer": "Jean Martin",
+            "reviewed_at": "2024-11-10T11:30:00Z",
+            "score": 8.8,
+            "comments": "Très bonne qualité rédactionnelle"
+          }
+        },
+        "stats": {
+          "questions_count": 18,
+          "flashcards_count": 12,
+          "estimated_duration": 45,
+          "difficulty_level": "intermediate"
+        }
+      },
+      {
+        "version": "v2",
+        "version_number": 2,
+        "created_at": "2024-10-15T09:15:00Z",
+        "created_by": {
+          "id": "teacher-001",
+          "name": "Marie Dupont",
+          "role": "Enseignant"
+        },
+        "status": "archived",
+        "is_current": false,
+        "change_summary": "Correction d'erreurs mathématiques et ajout d'exemples",
+        "changes": [
+          {
+            "type": "content_fixed",
+            "description": "Correction de 2 erreurs dans les formules"
+          },
+          {
+            "type": "content_added",
+            "description": "Ajout de 4 exemples concrets d'application"
+          }
+        ],
+        "validation": {
+          "pedagogical_review": {
+            "status": "approved",
+            "reviewer": "Luc Petit",
+            "reviewed_at": "2024-10-15T08:00:00Z",
+            "score": 8.5,
+            "comments": "Corrections pertinentes"
+          },
+          "quality_review": {
+            "status": "approved",
+            "reviewer": "Jean Martin",
+            "reviewed_at": "2024-10-15T08:30:00Z",
+            "score": 8.2,
+            "comments": "Bon travail de correction"
+          }
+        },
+        "stats": {
+          "questions_count": 13,
+          "flashcards_count": 10,
+          "estimated_duration": 40,
+          "difficulty_level": "intermediate"
+        }
+      },
+      {
+        "version": "v1",
+        "version_number": 1,
+        "created_at": "2024-09-01T08:00:00Z",
+        "created_by": {
+          "id": "teacher-001",
+          "name": "Marie Dupont",
+          "role": "Enseignant"
+        },
+        "status": "archived",
+        "is_current": false,
+        "change_summary": "Version initiale",
+        "changes": [
+          {
+            "type": "content_added",
+            "description": "Création du thème : théorie, démonstration et exercices de base"
+          }
+        ],
+        "validation": {
+          "pedagogical_review": {
+            "status": "approved",
+            "reviewer": "Sophie Bernard",
+            "reviewed_at": "2024-09-01T07:00:00Z",
+            "score": 7.8,
+            "comments": "Bon départ, à enrichir"
+          },
+          "quality_review": {
+            "status": "approved",
+            "reviewer": "Jean Martin",
+            "reviewed_at": "2024-09-01T07:30:00Z",
+            "score": 7.5,
+            "comments": "Contenu correct mais perfectible"
+          }
+        },
+        "stats": {
+          "questions_count": 10,
+          "flashcards_count": 8,
+          "estimated_duration": 35,
+          "difficulty_level": "intermediate"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "total_versions": 3,
+    "demo_mode": true
+  }
+}

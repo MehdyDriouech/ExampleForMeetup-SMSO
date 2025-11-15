@@ -1,0 +1,143 @@
+{
+  "success": true,
+  "data": {
+    "curriculum_id": "curr-001-math-6eme",
+    "curriculum_title": "Mathématiques 6ème - Programme 2024",
+    "sequences": [
+      {
+        "id": "seq-001",
+        "order": 1,
+        "title": "Les nombres entiers et décimaux",
+        "description": "Manipulation des nombres entiers et décimaux : lecture, écriture, comparaison, opérations",
+        "duration_hours": 10,
+        "objectives": [
+          "Lire, écrire et représenter des nombres entiers et décimaux",
+          "Comparer, ranger et encadrer des nombres",
+          "Maîtriser les quatre opérations"
+        ],
+        "skills": [
+          "Calcul mental",
+          "Résolution de problèmes",
+          "Raisonnement mathématique"
+        ],
+        "assignments_linked": [
+          {
+            "id": "assign-101",
+            "title": "Quiz - Nombres entiers",
+            "type": "quiz",
+            "status": "published"
+          },
+          {
+            "id": "assign-102",
+            "title": "Flashcards - Opérations",
+            "type": "flashcard",
+            "status": "published"
+          }
+        ],
+        "completion_rate": 78,
+        "status": "active"
+      },
+      {
+        "id": "seq-002",
+        "order": 2,
+        "title": "Les fractions",
+        "description": "Introduction aux fractions : représentation, équivalence, comparaison et opérations simples",
+        "duration_hours": 12,
+        "objectives": [
+          "Comprendre la notion de fraction",
+          "Identifier des fractions équivalentes",
+          "Comparer des fractions simples",
+          "Additionner et soustraire des fractions de même dénominateur"
+        ],
+        "skills": [
+          "Représentation",
+          "Calcul mental",
+          "Raisonnement"
+        ],
+        "assignments_linked": [
+          {
+            "id": "assign-103",
+            "title": "Quiz - Fractions équivalentes",
+            "type": "quiz",
+            "status": "published"
+          }
+        ],
+        "completion_rate": 65,
+        "status": "active"
+      },
+      {
+        "id": "seq-003",
+        "order": 3,
+        "title": "Géométrie plane - Les figures",
+        "description": "Étude des figures géométriques planes : triangles, quadrilatères, cercles",
+        "duration_hours": 9,
+        "objectives": [
+          "Identifier et décrire les propriétés des figures planes",
+          "Tracer des figures géométriques précises",
+          "Calculer des périmètres et des aires"
+        ],
+        "skills": [
+          "Construction géométrique",
+          "Raisonnement spatial",
+          "Calcul d'aires"
+        ],
+        "assignments_linked": [],
+        "completion_rate": 42,
+        "status": "active"
+      },
+      {
+        "id": "seq-004",
+        "order": 4,
+        "title": "La proportionnalité",
+        "description": "Reconnaître et utiliser la proportionnalité dans des situations concrètes",
+        "duration_hours": 11,
+        "objectives": [
+          "Identifier une situation de proportionnalité",
+          "Compléter un tableau de proportionnalité",
+          "Résoudre des problèmes de proportionnalité",
+          "Utiliser les pourcentages et les échelles"
+        ],
+        "skills": [
+          "Résolution de problèmes",
+          "Raisonnement proportionnel",
+          "Calcul mental"
+        ],
+        "assignments_linked": [
+          {
+            "id": "assign-104",
+            "title": "Quiz - Proportionnalité",
+            "type": "quiz",
+            "status": "draft"
+          }
+        ],
+        "completion_rate": 30,
+        "status": "active"
+      },
+      {
+        "id": "seq-005",
+        "order": 5,
+        "title": "Organisation et gestion de données",
+        "description": "Lire, interpréter et construire des tableaux et des graphiques",
+        "duration_hours": 8,
+        "objectives": [
+          "Lire et interpréter des tableaux",
+          "Construire et utiliser des diagrammes",
+          "Calculer des moyennes",
+          "Introduire les notions de probabilités"
+        ],
+        "skills": [
+          "Lecture de données",
+          "Représentation graphique",
+          "Statistiques"
+        ],
+        "assignments_linked": [],
+        "completion_rate": 18,
+        "status": "planned"
+      }
+    ]
+  },
+  "meta": {
+    "total_sequences": 5,
+    "demo_mode": true
+  }
+}

@@ -1,0 +1,140 @@
+{
+  "success": true,
+  "data": {
+    "tenant_id": "tenant-demo-college-jean-moulin",
+    "tenant_name": "Collège Jean Moulin",
+    "tenant_type": "college",
+    "status": "active",
+    "created_at": "2024-09-01T08:00:00Z",
+    "updated_at": "2024-11-14T10:30:00Z",
+    "admin_contact": {
+      "name": "Pierre Lefevre",
+      "email": "pierre.lefevre@college-jeanmoulin.fr",
+      "phone": "+33 1 23 45 67 89",
+      "role": "Principal adjoint"
+    },
+    "subscription": {
+      "plan": "premium",
+      "start_date": "2024-09-01",
+      "end_date": "2025-08-31",
+      "max_students": 500,
+      "max_teachers": 50,
+      "features": [
+        "curriculum_builder",
+        "multi_review_workflow",
+        "ai_governance",
+        "analytics_advanced",
+        "ergomate_sync",
+        "custom_branding"
+      ]
+    },
+    "configuration": {
+      "branding": {
+        "primary_color": "#0066cc",
+        "logo_url": "https://example.com/logos/jean-moulin.png",
+        "institution_name": "Collège Jean Moulin - Paris 15ème"
+      },
+      "academic_settings": {
+        "academic_year": "2024-2025",
+        "timezone": "Europe/Paris",
+        "language": "fr",
+        "grade_levels": ["6ème", "5ème", "4ème", "3ème"],
+        "subjects": [
+          "Mathématiques",
+          "Français",
+          "Histoire-Géographie",
+          "SVT",
+          "Physique-Chimie",
+          "Anglais",
+          "Espagnol",
+          "EPS",
+          "Arts plastiques",
+          "Musique",
+          "Technologie"
+        ]
+      },
+      "workflow_settings": {
+        "enable_multi_review": true,
+        "required_approvals": 2,
+        "enable_version_control": true,
+        "enable_annotations": true,
+        "auto_publish_threshold": 8.5
+      },
+      "ai_settings": {
+        "enable_ai_generation": true,
+        "enable_ai_correction": true,
+        "ai_provider": "openai",
+        "content_moderation": "strict",
+        "data_retention_days": 90
+      },
+      "security_settings": {
+        "sso_enabled": false,
+        "sso_provider": null,
+        "password_policy": "strong",
+        "session_timeout_minutes": 60,
+        "ip_whitelist": [],
+        "two_factor_auth_required": false
+      },
+      "notification_settings": {
+        "email_notifications": true,
+        "weekly_digest": true,
+        "new_assignment_alerts": true,
+        "student_at_risk_alerts": true,
+        "quality_review_alerts": true
+      },
+      "integration_settings": {
+        "ergomate_sync_enabled": true,
+        "ergomate_sync_frequency": "real-time",
+        "export_formats": ["csv", "xlsx", "json"],
+        "api_access_enabled": true,
+        "webhook_url": null
+      }
+    },
+    "statistics": {
+      "total_students": 342,
+      "total_teachers": 38,
+      "total_classes": 14,
+      "total_themes": 156,
+      "total_assignments": 428,
+      "storage_used_mb": 2847,
+      "storage_limit_mb": 10240
+    },
+    "onboarding_status": {
+      "completed": true,
+      "completed_at": "2024-09-15T16:00:00Z",
+      "steps": {
+        "basic_info": {
+          "completed": true,
+          "completed_at": "2024-09-01T09:00:00Z"
+        },
+        "branding": {
+          "completed": true,
+          "completed_at": "2024-09-01T10:30:00Z"
+        },
+        "teachers_import": {
+          "completed": true,
+          "completed_at": "2024-09-02T14:00:00Z",
+          "imported_count": 38
+        },
+        "students_import": {
+          "completed": true,
+          "completed_at": "2024-09-05T11:00:00Z",
+          "imported_count": 342
+        },
+        "classes_setup": {
+          "completed": true,
+          "completed_at": "2024-09-08T16:00:00Z",
+          "created_count": 14
+        },
+        "first_assignments": {
+          "completed": true,
+          "completed_at": "2024-09-15T16:00:00Z",
+          "created_count": 12
+        }
+      }
+    }
+  },
+  "meta": {
+    "demo_mode": true
+  }
+}

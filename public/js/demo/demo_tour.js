@@ -38,6 +38,24 @@ class DemoTour {
                 action: () => window.navigateTo('sync')
             },
             {
+                title: "Curriculum Builder (Sprint 18)",
+                content: "Créez des parcours d'apprentissage personnalisés avec le Curriculum Builder. Organisez vos programmes en séquences pédagogiques et suivez la progression de chaque élève de manière individuelle.",
+                target: "#curriculum-content",
+                action: () => window.navigateTo('curriculum')
+            },
+            {
+                title: "Workflow Multi-acteurs (Sprint 19)",
+                content: "Collaborez avec vos collègues grâce au workflow de validation à plusieurs niveaux. Ajoutez des annotations, consultez l'historique des versions et assurez la qualité pédagogique de vos contenus.",
+                target: "#theme-validation-content",
+                action: () => window.navigateTo('theme-validation')
+            },
+            {
+                title: "Onboarding Tenant (Sprint 20)",
+                content: "Les administrateurs peuvent facilement créer de nouveaux établissements, importer des élèves et enseignants via CSV, et configurer les paramètres institutionnels en quelques clics.",
+                target: "#admin-onboarding-content",
+                action: () => window.navigateTo('admin-onboarding')
+            },
+            {
                 title: "Analytics & Qualité",
                 content: "StudyMate intègre des analytics avancés : KPI enseignants, détection des élèves à risque, analyse de qualité des contenus, gouvernance IA et RGPD.",
                 target: null,

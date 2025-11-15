@@ -1,0 +1,166 @@
+{
+  "success": true,
+  "data": {
+    "import_id": "import-20241114-173245",
+    "file_name": "eleves_6eme_2024_corrected.csv",
+    "import_type": "students",
+    "status": "completed",
+    "started_at": "2024-11-14T17:32:45Z",
+    "completed_at": "2024-11-14T17:32:52Z",
+    "duration_seconds": 7,
+    "results": {
+      "total_rows_processed": 26,
+      "successful_imports": 25,
+      "failed_imports": 0,
+      "skipped_duplicates": 1,
+      "created": 25,
+      "updated": 0
+    },
+    "imported_students": [
+      {
+        "row_number": 1,
+        "status": "created",
+        "student_id": "student-uuid-001",
+        "name": "Emma Rousseau",
+        "class": "6ème B",
+        "email": "emma.rousseau@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 2,
+        "status": "created",
+        "student_id": "student-uuid-002",
+        "name": "Lucas Martin",
+        "class": "6ème B",
+        "email": "lucas.martin@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 3,
+        "status": "created",
+        "student_id": "student-uuid-003",
+        "name": "Léa Dubois",
+        "class": "6ème A",
+        "email": "lea.dubois@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 4,
+        "status": "created",
+        "student_id": "student-uuid-004",
+        "name": "Thomas Petit",
+        "class": "6ème C",
+        "email": "thomas.petit@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 5,
+        "status": "created",
+        "student_id": "student-uuid-005",
+        "name": "Chloé Bernard",
+        "class": "6ème A",
+        "email": "chloe.bernard@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 6,
+        "status": "created",
+        "student_id": "student-uuid-006",
+        "name": "Nathan Robert",
+        "class": "6ème B",
+        "email": "nathan.robert@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 7,
+        "status": "created",
+        "student_id": "student-uuid-007",
+        "name": "Manon Richard",
+        "class": "6ème D",
+        "email": "manon.richard@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 8,
+        "status": "created",
+        "student_id": "student-uuid-008",
+        "name": "Hugo Durand",
+        "class": "6ème C",
+        "email": "hugo.durand@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 9,
+        "status": "created",
+        "student_id": "student-uuid-009",
+        "name": "Camille Moreau",
+        "class": "6ème A",
+        "email": "camille.moreau@college-jeanmoulin.fr"
+      },
+      {
+        "row_number": 10,
+        "status": "created",
+        "student_id": "student-uuid-010",
+        "name": "Enzo Simon",
+        "class": "6ème B",
+        "email": "enzo.simon@college-jeanmoulin.fr"
+      }
+    ],
+    "skipped_items": [
+      {
+        "row_number": 15,
+        "status": "skipped",
+        "reason": "Élève déjà présent dans le système",
+        "data": {
+          "nom": "Rousseau",
+          "prenom": "Emma",
+          "classe": "6ème B"
+        }
+      }
+    ],
+    "errors": [],
+    "class_assignments": {
+      "6ème A": {
+        "students_added": 8,
+        "class_id": "class-6a"
+      },
+      "6ème B": {
+        "students_added": 10,
+        "class_id": "class-6b"
+      },
+      "6ème C": {
+        "students_added": 5,
+        "class_id": "class-6c"
+      },
+      "6ème D": {
+        "students_added": 2,
+        "class_id": "class-6d"
+      }
+    },
+    "notifications": {
+      "welcome_emails_sent": 25,
+      "parent_notifications_sent": 25,
+      "admin_notification_sent": true
+    },
+    "next_steps": [
+      {
+        "action": "assign_curriculum",
+        "title": "Assigner un parcours d'apprentissage",
+        "description": "Attribuez des programmes/curriculums aux nouvelles classes",
+        "url": "/curriculum"
+      },
+      {
+        "action": "create_assignments",
+        "title": "Créer des activités",
+        "description": "Créez vos premières activités (quiz, flashcards) pour les élèves",
+        "url": "/assignments/new"
+      },
+      {
+        "action": "sync_ergomate",
+        "title": "Synchroniser avec ErgoMate",
+        "description": "Les élèves pourront se connecter à l'app ErgoMate avec leurs identifiants",
+        "url": "/sync"
+      }
+    ],
+    "summary": {
+      "message": "Importation réussie ! 25 élèves ont été ajoutés au système.",
+      "details": "Les élèves ont été répartis dans 4 classes. Des emails de bienvenue ont été envoyés.",
+      "success_rate": 96.15
+    }
+  },
+  "meta": {
+    "demo_mode": true
+  }
+}
