@@ -600,22 +600,6 @@ mock/*.json (données fictives)
 - [ ] Analytics sur l'usage du mode démo (conversion démo → prod)
 - [ ] Traduction multilingue (FR/EN/ES) du parcours guidé
 
----
-
-## ✅ Validation
-
-**Critères de complétion du sprint** :
-
-- ✅ Paramètre `DEMO_MODE` fonctionnel  
-- ✅ FakeRouter intercepte tous les appels ciblés  
-- ✅ 10+ fichiers mock avec données crédibles  
-- ✅ Bouton « Découvrir la démo » visible et fonctionnel  
-- ✅ Bandeau mode démo affiché  
-- ✅ Parcours guidé complet (7 étapes)  
-- ✅ Tous les écrans principaux testés et fonctionnels  
-- ✅ Documentation complète (`SPRINT_17_DEMO_MODE.md`, `CHANGELOG_SPRINT_17.md`)  
-
-**Sprint 17 : ✅ COMPLÉTÉ** 🎉
 
 ---
 
