@@ -1,8 +1,7 @@
-# 🎓 StudyMate School Orchestrator
-
+# 🎓 StudyMate-Exampleformeetup
 > Plateforme institutionnelle qui synchronise **ErgoMate** et les équipes pédagogiques pour piloter, créer et qualifier les contenus d'apprentissage.
 
-- **Version produit** : `Alpha-01`
+- **Version produit** : `v1`
 - **Dernière mise à jour** : 2025-11-14
 - **Auteur / Mainteneur** : Mehdy Driouech – DAWP Engineering  
 
