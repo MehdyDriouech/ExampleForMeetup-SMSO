@@ -1,7 +1,7 @@
 # 🎓 StudyMate-Exampleformeetup
 > Plateforme institutionnelle qui synchronise **ErgoMate** et les équipes pédagogiques pour piloter, créer et qualifier les contenus d'apprentissage.
 
-- **Version produit** : `v1`
+- **Version produit** : `broken-v1`
 - **Dernière mise à jour** : 2025-11-14
 - **Auteur / Mainteneur** : Mehdy Driouech – DAWP Engineering  
 
